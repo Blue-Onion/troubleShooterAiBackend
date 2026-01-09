@@ -1,4 +1,7 @@
 import { createOrg, getOrg, getOrgs, joinOrg } from "#src/services/org.service.js";
+import logger from "#src/utils/logger.js";
+import { createOrgSchema, orgIdParamSchema } from "#src/validations/org.validation.js";
+import { log } from "console";
 
 export const gettingAllOrg = async (req, res) => {
   const userId = req.user?.id;
@@ -24,31 +27,30 @@ export const gettingOrg = async (req, res) => {
 };
 export const creatingOrg = async (req, res) => {
     const userId = req.user?.id;
-    if (!userId) return res.status(401).json({ error: "Unauthorized" });
-    const { name, description, address, slug, jobCategories, issueCategories } = req.body;
-    if (!name) return res.status(400).json({ error: "Organization name is required" });
+    console.log(userId);
+
+  
     try {
-        const org = await createOrg(userId, { name, description, address, slug, jobCategories, issueCategories });
-        res.status(201).json(org);
+      const data = createOrgSchema.parse(req.body);
+      const org = await createOrg(userId, data);
+      return res.status(201).json(org);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        logger.error(error.message);
+      return res.status(400).json({ error: error.message });
     }
-};
-export const joiningOrg = async (req, res) => {
+  };
+  export const joiningOrg = async (req, res) => {
     const userId = req.user?.id;
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
   
-    const { id } = req.params;
-    const { role, job } = req.body;
-  
-    if (!id) return res.status(400).json({ error: "Invalid id" });
-    if (!role) return res.status(400).json({ error: "Role is required" });
-  
     try {
-      const membership = await joinOrg(userId, id, { role, job });
+      const { id } = orgIdParamSchema.parse(req.params);
+      const data = joinOrgSchema.parse(req.body);
+  
+      const membership = await joinOrg(userId, id, data);
       return res.status(201).json(membership);
     } catch (error) {
-      return res.status(500).json({ error: error.message });
+      return res.status(400).json({ error: error.message });
     }
   };
 

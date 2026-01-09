@@ -9,22 +9,22 @@ datasource db {
 }
 
 model User {
-  id        String @id @default(uuid())
-  name      String
-  email     String @unique
-  password  String
+  id       String @id @default(uuid())
+  name     String
+  email    String @unique
+  password String
 
-  memberships Membership[]
-  reportedIssues Issue[] @relation("ReportedBy")
+  memberships    Membership[]
+  reportedIssues Issue[]      @relation("ReportedBy")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Organization {
-  id          String @id @default(uuid())
+  id          String  @id @default(uuid())
   name        String
-  slug        String @unique
+  slug        String  @unique
   description String?
   address     String?
 
@@ -45,7 +45,7 @@ model Membership {
   role           OrgRole
 
   jobCategoryId String?
-  jobCategory   JobCategory?
+  jobCategory   JobCategory? @relation(fields: [jobCategoryId], references: [id])
 
   user         User         @relation(fields: [userId], references: [id])
   organization Organization @relation(fields: [organizationId], references: [id])
@@ -62,7 +62,7 @@ model Issue {
   categoryId     String
   reportedById   String
 
-  organization Organization @relation(fields: [organizationId], references: [id])
+  organization Organization  @relation(fields: [organizationId], references: [id])
   category     IssueCategory @relation(fields: [categoryId], references: [id])
   reportedBy   User          @relation("ReportedBy", fields: [reportedById], references: [id])
 
@@ -83,7 +83,7 @@ model IssueCategory {
   organizationId String
 
   organization Organization @relation(fields: [organizationId], references: [id])
-  issues        Issue[]
+  issues       Issue[]
 
   createdAt DateTime @default(now())
 
@@ -96,7 +96,7 @@ model JobCategory {
   organizationId String
 
   organization Organization @relation(fields: [organizationId], references: [id])
-  memberships   Membership[]
+  memberships  Membership[]
 
   createdAt DateTime @default(now())
 
