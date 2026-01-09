@@ -101,7 +101,7 @@ export const createOrg = async (userId, data) => {
 export const joinOrg = async (userId, orgId, data) => {
   if (!userId) throw new Error("Unauthorized");
   if (!orgId) throw new Error("Invalid id");
-  console.log(orgId);
+
   
   const { role, job } = data;
 
@@ -110,7 +110,7 @@ export const joinOrg = async (userId, orgId, data) => {
       if (!job) throw new Error("Job category is required");
 
       return db.$transaction(async (tx) => {
-        console.log(orgId);
+
         const allJob=await tx.jobCategory.findMany({
             where:{
                 organizationId:orgId
