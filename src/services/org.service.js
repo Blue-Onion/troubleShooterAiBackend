@@ -116,7 +116,7 @@ export const joinOrg = async (userId, orgId, data) => {
                 organizationId:orgId
             }
         })
-        console.log(allJob);
+
         
         const jobCategory = await tx.jobCategory.findUnique({
           where: {
@@ -154,3 +154,55 @@ export const joinOrg = async (userId, orgId, data) => {
     throw error;
   }
 };
+
+export const leaveOrg=async(userId,orgId)=>{
+    if(!userId)throw new Error("Unauthorized")
+    if(!orgId)throw new Error("Invalid id")
+    
+        try {
+            return db.membership.delete({
+                where:{
+                    userId_organizationId:{
+                        userId,
+                        organizationId:orgId
+                    }
+                }
+            })
+        } catch (error) {
+            logger.error("Error leaving organization:", error);
+            throw error;
+        }
+}
+export const deleteOrg=async(userId,orgId)=>{
+    if(!userId)throw new Error("Unauthorized")
+    if(!orgId)throw new Error("Invalid id")
+    
+        try {
+
+            return db.$transaction(async(tx)=>{
+                await tx.jobCategory.deleteMany({
+                    where:{
+                        organizationId:orgId
+                    }
+                })
+                await tx.issueCategory.deleteMany({
+                    where:{
+                        organizationId:orgId
+                    }
+                })
+                await tx.membership.deleteMany({
+                    where:{
+                        organizationId:orgId
+                    }
+                })
+                return tx.organization.delete({
+                    where:{
+                        id:orgId
+                    }
+                })
+            })
+        } catch (error) {
+            logger.error("Error deleting organization:", error);
+            throw error;
+        }
+}
