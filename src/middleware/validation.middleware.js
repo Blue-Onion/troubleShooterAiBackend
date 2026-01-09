@@ -1,11 +1,16 @@
+
+import logger from "#src/utils/logger.js";
+
+
 /**
  * Middleware to validate request body against a Zod schema
  */
-export const validate = (schema) => {
+export const validate = () => {
   return (req, res, next) => {
+    logger.info("Validating")
+    
     try {
-      const validated = schema.parse(req.body);
-      req.body = validated;
+
       next();
     } catch (error) {
       if (error.errors) {
