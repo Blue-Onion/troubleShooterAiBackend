@@ -43,9 +43,9 @@ model Membership {
   userId         String
   organizationId String
   role           OrgRole
-
-  jobCategoryId String?
-  jobCategory   JobCategory? @relation(fields: [jobCategoryId], references: [id])
+  status         MembershipStatus @default(PENDING)
+  jobCategoryId  String?
+  jobCategory    JobCategory?     @relation(fields: [jobCategoryId], references: [id])
 
   user         User         @relation(fields: [userId], references: [id])
   organization Organization @relation(fields: [organizationId], references: [id])
@@ -120,4 +120,11 @@ enum Priority {
   MEDIUM
   MEDIUM_HIGH
   HIGH
+}
+
+enum MembershipStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  SUSPENDED
 }
