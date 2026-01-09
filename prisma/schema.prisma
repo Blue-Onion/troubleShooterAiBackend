@@ -82,17 +82,17 @@ model Issue {
 }
 
 model IssueCategory {
-  id             String @id @default(uuid())
-  name           String
-  organizationId String
+    id             String @id @default(uuid())
+    name           String
+    organizationId String
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+    organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  issues Issue[]
+    issues Issue[]
 
-  createdAt DateTime @default(now())
+    createdAt DateTime @default(now())
 
-  @@unique([name, organizationId])
+    @@unique([name, organizationId])
 }
 
 model JobCategory {
@@ -100,8 +100,9 @@ model JobCategory {
     name           String
     organizationId String
 
-    organization Organization @relation(fields: [organizationId], references: [id])
-    memberships  Membership[]
+    organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+    memberships Membership[]
 
     createdAt DateTime @default(now())
 
