@@ -158,37 +158,40 @@ export const leaveOrg = async (userId, orgId) => {
   if (!orgId) throw new Error("Invalid id");
 
   try {
-    const membership = await db.membership.findUnique({
-      where: {
-        userId_organizationId: {
-          userId,
-          organizationId: orgId,
-        },
-      },
-    });
+    return db.$transaction(async (tx) => {
 
-    if (!membership) throw new Error("Not a member of this organization");
-    if (membership.role === "ADMIN") {
-      const adminCount = await db.membership.count({
-        where: {
-          organizationId: orgId,
-          role: "ADMIN",
-        },
-      });
-
-      if (adminCount <= 1) {
-        throw new Error("Organization must have at least one admin");
-      }
-    }
-
-    return await db.membership.delete({
-      where: {
-        userId_organizationId: {
-          userId,
-          organizationId: orgId,
-        },
-      },
-    });
+        const membership = await tx.membership.findUnique({
+            where: {
+                userId_organizationId: {
+                    userId,
+                    organizationId: orgId,
+                },
+            },
+        });
+        
+        if (!membership) throw new Error("Not a member of this organization");
+        if (membership.role === "ADMIN") {
+            const adminCount = await tx.membership.count({
+                where: {
+                    organizationId: orgId,
+                    role: "ADMIN",
+                },
+            });
+            
+            if (adminCount <= 1) {
+                throw new Error("Organization must have at least one admin");
+            }
+        }
+        
+        return await tx.membership.delete({
+            where: {
+                userId_organizationId: {
+                    userId,
+                    organizationId: orgId,
+                },
+            },
+        });
+    })
   } catch (error) {
     logger.error("Error leaving organization:", error);
     throw error;
@@ -197,25 +200,29 @@ export const leaveOrg = async (userId, orgId) => {
 export const deleteOrg = async (userId, orgId) => {
     if (!userId) throw new Error("Unauthorized");
     if (!orgId) throw new Error("Invalid id");
-  
-    const membership = await db.membership.findUnique({
-      where: {
-        userId_organizationId: {
-          userId,
-          organizationId: orgId,
-        },
-      },
-    });
-  
-    if (!membership) throw new Error("Forbidden");
-    if (membership.role !== "ADMIN")
-      throw new Error("Only admin can delete organization");
-  
-    try {
-      return await db.organization.delete({
-        where: { id: orgId },
-      });
-    } catch (error) {
+    try{
+
+        return db.$transaction(async (tx) => {
+            const membership = await tx.membership.findUnique({
+                where: {
+                    userId_organizationId: {
+                        userId,
+                        organizationId: orgId,
+                    },
+                },
+            });
+            
+            if (!membership) throw new Error("Forbidden");
+            if (membership.role !== "ADMIN")
+                throw new Error("Only admin can delete organization");
+            
+            
+            return await tx.organization.delete({
+                where: { id: orgId },
+                
+            })
+        })
+    }catch (error) {
       logger.error("Error deleting organization:", error);
       throw error;
     }
