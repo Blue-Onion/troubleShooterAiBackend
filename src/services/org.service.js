@@ -195,42 +195,28 @@ export const leaveOrg = async (userId, orgId) => {
   }
 };
 export const deleteOrg = async (userId, orgId) => {
-  if (!userId) throw new Error("Unauthorized");
-  if (!orgId) throw new Error("Invalid id");
-
-  const membership = await db.membership.findUnique({
-    where: {
-      userId_organizationId: {
-        userId,
-        organizationId: orgId,
+    if (!userId) throw new Error("Unauthorized");
+    if (!orgId) throw new Error("Invalid id");
+  
+    const membership = await db.membership.findUnique({
+      where: {
+        userId_organizationId: {
+          userId,
+          organizationId: orgId,
+        },
       },
-    },
-  });
-
-  if (!membership) throw new Error("Forbidden");
-  if (membership.role !== "ADMIN")
-    throw new Error("Only admin can delete organization");
-
-  try {
-    return await db.$transaction(async (tx) => {
-      await tx.jobCategory.deleteMany({
-        where: { organizationId: orgId },
-      });
-
-      await tx.issueCategory.deleteMany({
-        where: { organizationId: orgId },
-      });
-
-      await tx.membership.deleteMany({
-        where: { organizationId: orgId },
-      });
-
-      return tx.organization.delete({
+    });
+  
+    if (!membership) throw new Error("Forbidden");
+    if (membership.role !== "ADMIN")
+      throw new Error("Only admin can delete organization");
+  
+    try {
+      return await db.organization.delete({
         where: { id: orgId },
       });
-    });
-  } catch (error) {
-    logger.error("Error deleting organization:", error);
-    throw error;
-  }
-};
+    } catch (error) {
+      logger.error("Error deleting organization:", error);
+      throw error;
+    }
+  };

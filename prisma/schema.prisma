@@ -1,80 +1,84 @@
 generator client {
-  provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
+    provider = "prisma-client-js"
+    output   = "../src/generated/prisma"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
 }
 
 model User {
-  id       String @id @default(uuid())
-  name     String
-  email    String @unique
-  password String
+    id       String @id @default(uuid())
+    name     String
+    email    String @unique
+    password String
 
-  memberships    Membership[]
-  reportedIssues Issue[]      @relation("ReportedBy")
+    memberships    Membership[]
+    reportedIssues Issue[]      @relation("ReportedBy")
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
 
 model Organization {
-  id          String  @id @default(uuid())
-  name        String
-  slug        String  @unique
-  description String?
-  address     String?
+    id          String  @id @default(uuid())
+    name        String
+    slug        String  @unique
+    description String?
+    address     String?
 
-  memberships     Membership[]
-  issues          Issue[]
-  issueCategories IssueCategory[]
-  jobCategories   JobCategory[]
+    memberships     Membership[]
+    issues          Issue[]
+    issueCategories IssueCategory[]
+    jobCategories   JobCategory[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
 
 model Membership {
-  id String @id @default(uuid())
+    id String @id @default(uuid())
 
-  userId         String
-  organizationId String
-  role           OrgRole
-  status         MembershipStatus @default(PENDING)
-  jobCategoryId  String?
-  jobCategory    JobCategory?     @relation(fields: [jobCategoryId], references: [id])
+    userId         String
+    organizationId String
+    role           OrgRole
+    status         MembershipStatus @default(PENDING)
+    jobCategoryId  String?
 
-  user         User         @relation(fields: [userId], references: [id])
-  organization Organization @relation(fields: [organizationId], references: [id])
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now())
+    organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, organizationId])
+    jobCategory JobCategory? @relation(fields: [jobCategoryId], references: [id], onDelete: SetNull)
+
+    createdAt DateTime @default(now())
+
+    @@unique([userId, organizationId])
 }
 
 model Issue {
-  id String @id @default(uuid())
+    id String @id @default(uuid())
 
-  organizationId String
-  categoryId     String
-  reportedById   String
+    organizationId String
+    categoryId     String
+    reportedById   String
 
-  organization Organization  @relation(fields: [organizationId], references: [id])
-  category     IssueCategory @relation(fields: [categoryId], references: [id])
-  reportedBy   User          @relation("ReportedBy", fields: [reportedById], references: [id])
+    organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  title       String
-  description String
-  imageUrl    String?
+    category IssueCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
-  priority Priority
-  status   IssueStatus @default(PENDING)
+    reportedBy User @relation("ReportedBy", fields: [reportedById], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+    title       String
+    description String
+    imageUrl    String?
+
+    priority Priority
+    status   IssueStatus @default(PENDING)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
 
 model IssueCategory {
@@ -82,8 +86,9 @@ model IssueCategory {
   name           String
   organizationId String
 
-  organization Organization @relation(fields: [organizationId], references: [id])
-  issues       Issue[]
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  issues Issue[]
 
   createdAt DateTime @default(now())
 
@@ -91,40 +96,40 @@ model IssueCategory {
 }
 
 model JobCategory {
-  id             String @id @default(uuid())
-  name           String
-  organizationId String
+    id             String @id @default(uuid())
+    name           String
+    organizationId String
 
-  organization Organization @relation(fields: [organizationId], references: [id])
-  memberships  Membership[]
+    organization Organization @relation(fields: [organizationId], references: [id])
+    memberships  Membership[]
 
-  createdAt DateTime @default(now())
+    createdAt DateTime @default(now())
 
-  @@unique([name, organizationId])
+    @@unique([name, organizationId])
 }
 
 enum OrgRole {
-  ADMIN
-  STAFF
-  MEMBER
+    ADMIN
+    STAFF
+    MEMBER
 }
 
 enum IssueStatus {
-  PENDING
-  IN_PROGRESS
-  RESOLVED
+    PENDING
+    IN_PROGRESS
+    RESOLVED
 }
 
 enum Priority {
-  LOW
-  MEDIUM
-  MEDIUM_HIGH
-  HIGH
+    LOW
+    MEDIUM
+    MEDIUM_HIGH
+    HIGH
 }
 
 enum MembershipStatus {
-  PENDING
-  ACCEPTED
-  REJECTED
-  SUSPENDED
+    PENDING
+    ACCEPTED
+    REJECTED
+    SUSPENDED
 }
