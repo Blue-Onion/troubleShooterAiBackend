@@ -2,24 +2,45 @@ import { db } from "#src/lib/prisma.js";
 import logger from "#src/utils/logger.js";
 
 export const getOrg = async (userId, orgId) => {
-  if (!userId) throw new Error("Unauthorized");
-  if (!orgId) throw new Error("Invalid id");
-
-  const membership = await db.membership.findUnique({
-    where: {
-      userId_organizationId: {
-        userId,
-        organizationId: orgId,
+  if (!userId) {
+    const error = new Error("Unauthorized");
+    error.status = 401;
+    throw error;
+  }
+  if (!orgId) {
+    const error = new Error("Invalid id");
+    error.status = 400;
+    throw error;
+  }
+  try {
+    const membership = await db.membership.findUnique({
+      where: {
+        userId_organizationId: {
+          userId,
+          organizationId: orgId,
+        },
       },
-    },
-    include: {
-      organization: true,
-    },
-  });
+      include: {
+        organization: true,
+      },
+    });
 
-  if (!membership) throw new Error("Forbidden");
+    if (!membership) {
+      const error = new Error("Forbidden");
+      error.status = 403;
+      throw error;
+    }
+    if (!membership.organization) {
+      const error = new Error("Organization not found");
+      error.status = 404;
+      throw error;
+    }
 
-  return membership.organization;
+    return membership.organization;
+  } catch (error) {
+    logger.error("Error getting organization:", error);
+    throw error;
+  }
 };
 export const getOrgs = async (userId) => {
   if (!userId) throw new Error("Unauthorized");
@@ -31,7 +52,7 @@ export const getOrgs = async (userId) => {
       organization: true,
     },
   });
-  return orgs.map((org) => org.organization);
+  return { orgs: orgs.map((org) => org.organization), count: orgs.length };
 };
 export const createOrg = async (userId, data) => {
   if (!userId) throw new Error("Unauthorized");
@@ -47,12 +68,7 @@ export const createOrg = async (userId, data) => {
   } = data;
 
   const finalSlug =
-    slug ??
-    name
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9\s-]/g, "")
-      .replace(/\s+/g, "-");
+    slug ?? name.toLowerCase().trim().replace(/\s+/g, "-").replace(/-+/g, "-");
 
   try {
     return await db.$transaction(async (tx) => {
@@ -102,7 +118,6 @@ export const joinOrg = async (userId, orgId, data) => {
   if (!userId) throw new Error("Unauthorized");
   if (!orgId) throw new Error("Invalid id");
 
-  
   const { role, job } = data;
 
   try {
@@ -110,14 +125,6 @@ export const joinOrg = async (userId, orgId, data) => {
       if (!job) throw new Error("Job category is required");
 
       return db.$transaction(async (tx) => {
-
-        const allJob=await tx.jobCategory.findMany({
-            where:{
-                organizationId:orgId
-            }
-        })
-
-        
         const jobCategory = await tx.jobCategory.findUnique({
           where: {
             name_organizationId: {
@@ -155,54 +162,98 @@ export const joinOrg = async (userId, orgId, data) => {
   }
 };
 
-export const leaveOrg=async(userId,orgId)=>{
-    if(!userId)throw new Error("Unauthorized")
-    if(!orgId)throw new Error("Invalid id")
-    
-        try {
-            return db.membership.delete({
-                where:{
-                    userId_organizationId:{
-                        userId,
-                        organizationId:orgId
-                    }
-                }
-            })
-        } catch (error) {
-            logger.error("Error leaving organization:", error);
-            throw error;
-        }
-}
-export const deleteOrg=async(userId,orgId)=>{
-    if(!userId)throw new Error("Unauthorized")
-    if(!orgId)throw new Error("Invalid id")
-    
-        try {
+export const leaveOrg = async (userId, orgId) => {
+  if (!userId) throw new Error("Unauthorized");
+  if (!orgId) throw new Error("Invalid id");
 
-            return db.$transaction(async(tx)=>{
-                await tx.jobCategory.deleteMany({
-                    where:{
-                        organizationId:orgId
-                    }
-                })
-                await tx.issueCategory.deleteMany({
-                    where:{
-                        organizationId:orgId
-                    }
-                })
-                await tx.membership.deleteMany({
-                    where:{
-                        organizationId:orgId
-                    }
-                })
-                return tx.organization.delete({
-                    where:{
-                        id:orgId
-                    }
-                })
-            })
-        } catch (error) {
-            logger.error("Error deleting organization:", error);
-            throw error;
+  try {
+    return db.$transaction(async (tx) => {
+      const membership = await tx.membership.findUnique({
+        where: {
+          userId_organizationId: {
+            userId,
+            organizationId: orgId,
+          },
+        },
+      });
+
+      if (!membership) throw new Error("Not a member of this organization");
+      if (membership.role === "ADMIN") {
+        const adminCount = await tx.membership.count({
+          where: {
+            organizationId: orgId,
+            role: "ADMIN",
+          },
+        });
+
+        if (adminCount <= 1) {
+          throw new Error("Organization must have at least one admin");
         }
-}
+      }
+
+      return await tx.membership.delete({
+        where: {
+          userId_organizationId: {
+            userId,
+            organizationId: orgId,
+          },
+        },
+      });
+    });
+  } catch (error) {
+    logger.error("Error leaving organization:", error);
+    throw error;
+  }
+};
+export const deleteOrg = async (userId, orgId) => {
+  if (!userId) {
+    const error = new Error("Unauthorized");
+    error.status = 401;
+    throw error;
+  }
+  if (!orgId) {
+    const error = new Error("Invalid id");
+    error.status = 400;
+    throw error;
+  }
+  try {
+    return await db.$transaction(async (tx) => {
+      const orgIndex = await tx.organization.findUnique({
+        where: { id: orgId },
+      });
+
+      if (!orgIndex) {
+        const error = new Error("Organization not found");
+        error.status = 404;
+        throw error;
+      }
+
+      const membership = await tx.membership.findUnique({
+        where: {
+          userId_organizationId: {
+            userId,
+            organizationId: orgId,
+          },
+        },
+      });
+
+      if (!membership) {
+        const error = new Error("Forbidden");
+        error.status = 403;
+        throw error;
+      }
+      if (membership.role !== "ADMIN") {
+        const error = new Error("Only admin can delete organization");
+        error.status = 403;
+        throw error;
+      }
+
+      return await tx.organization.delete({
+        where: { id: orgId },
+      });
+    });
+  } catch (error) {
+    logger.error("Error deleting organization:", error);
+    throw error;
+  }
+};
