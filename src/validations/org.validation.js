@@ -9,10 +9,10 @@ export const createOrgSchema=z.object({
     issueCategories:z.array(z.object({name:z.string().min(1, "Issue category name is required")})),
 })
 export const joinOrgSchema = z.object({
-    orgId: z.string().uuid(),
+
     role: z.enum(["ADMIN", "STAFF", "MEMBER"]),
     job: z.string().optional(),
   });
   export const orgIdParamSchema = z.object({
-    id: z.string().uuid("Invalid organization id"),
+    id: z.string().min(1, "Invalid organization id"),
   });

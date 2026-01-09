@@ -7,5 +7,5 @@ router.use(authenticate)
 router.get("/get-org/:id", gettingOrg);
 router.get("/get-org", gettingAllOrg);
 router.post("/create-org",creatingOrg);
-router.post("/join-org", joiningOrg);
+router.post("/join-org/:id", joiningOrg);
 export default router

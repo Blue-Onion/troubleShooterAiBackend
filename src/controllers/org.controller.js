@@ -1,6 +1,6 @@
 import { createOrg, getOrg, getOrgs, joinOrg } from "#src/services/org.service.js";
 import logger from "#src/utils/logger.js";
-import { createOrgSchema, orgIdParamSchema } from "#src/validations/org.validation.js";
+import { createOrgSchema, joinOrgSchema, orgIdParamSchema } from "#src/validations/org.validation.js";
 import { log } from "console";
 
 export const gettingAllOrg = async (req, res) => {
@@ -40,16 +40,23 @@ export const creatingOrg = async (req, res) => {
     }
   };
   export const joiningOrg = async (req, res) => {
+
     const userId = req.user?.id;
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+    
   
     try {
       const { id } = orgIdParamSchema.parse(req.params);
+      console.log(id);
+      
       const data = joinOrgSchema.parse(req.body);
-  
+      console.log(data);
+      
       const membership = await joinOrg(userId, id, data);
       return res.status(201).json(membership);
     } catch (error) {
+        logger.error(error.message);
       return res.status(400).json({ error: error.message });
     }
   };
