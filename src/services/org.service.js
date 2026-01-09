@@ -58,8 +58,8 @@ export const createOrg = async (userId, data) => {
     name
       .toLowerCase()
       .trim()
-      .replace(/[^a-z0-9\s-]/g, "")
-      .replace(/\s+/g, "-");
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-");
 
   try {
     return await db.$transaction(async (tx) => {
