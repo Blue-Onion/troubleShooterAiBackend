@@ -4,3 +4,4 @@ logs
 /src/generated/prisma
 .vscode
 .DS_Store
+uploads
