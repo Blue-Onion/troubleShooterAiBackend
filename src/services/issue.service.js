@@ -35,13 +35,13 @@ export const getAllIssue = async (userId, orgId) => {
   issueCategory.forEach((item) => {
     item.issue = [];
   });
-  issue.map((issue) => {
-    issueCategory.find((item) => {
-      if (item.id === issue.categoryId) {
-        item.issue.push(issue);
-      }
-    });
+  issue.forEach((issue) => {
+    const category = issueCategory.find((item) => item.id === issue.categoryId);
+    if (category) {
+      category.issue.push(issue);
+    }
   });
+    
 
   return { issueByCategory: issueCategory, issues: issue, count: issue.length };
 };
@@ -251,7 +251,7 @@ export const getAiDesc = async (userId, orgId, image,desc) => {
     const issue=JSON.parse(cleanedText)
     if(issue.status){
         const error=new Error(issue.message)
-        error.status=issue.status
+        error.status=400
         throw error
     }
 

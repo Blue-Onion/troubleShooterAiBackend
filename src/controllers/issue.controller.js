@@ -21,7 +21,7 @@ export const gettingIssues=async(req,res)=>{
 
     try {
         const issue=await getAllIssue(userId,orgId)
-        return res.status(201).json({issue})
+        return res.status(200).json({issue})
     } catch (error) {
         logger.error(error.message)
         return res.status(400).json({error:error.message})
@@ -33,8 +33,8 @@ export const gettingIssue=async(req,res)=>{
     const issueId=req.params.issueId
 
     try {
-        const issue=await getAllIssue(userId,orgId,issueId)
-        return res.status(201).json({issue})
+        const issue=await getIssue(userId,orgId,issueId)
+        return res.status(200).json({issue})
     } catch (error) {
         logger.error(error.message)
         return res.status(400).json({error:error.message})
@@ -54,7 +54,7 @@ export const gettingAiDesc=async(req,res)=>{
 
         const issue=await getAiDesc(userId,orgId,image,desc)
 
-        return res.status(201).json({issue})
+        return res.status(200).json({issue})
     } catch (error) {
         logger.error(error.message)
         return res.status(400).json({error:error.message})
