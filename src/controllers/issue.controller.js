@@ -36,7 +36,7 @@ export const gettingIssues = async (req, res) => {
     return res.status(200).json({ issue });
   } catch (error) {
     logger.error(error.message);
-    return res.status(400).json({ error: error.message });
+    return res.status(error.status || 400).json({ error: error.message });
   }
 };
 export const gettingIssue = async (req, res) => {
@@ -49,7 +49,7 @@ export const gettingIssue = async (req, res) => {
     return res.status(200).json({ issue });
   } catch (error) {
     logger.error(error.message);
-    return res.status(400).json({ error: error.message });
+    return res.status(error.status || 400).json({ error: error.message });
   }
 };
 export const gettingAiDesc = async (req, res) => {
@@ -69,6 +69,6 @@ export const gettingAiDesc = async (req, res) => {
     return res.status(200).json({ issue });
   } catch (error) {
     logger.error(error.message);
-    return res.status(400).json({ error: error.message });
+    return res.status(error.status || 400).json({ error: error.message });
   }
 };

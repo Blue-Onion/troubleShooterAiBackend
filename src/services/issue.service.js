@@ -1,5 +1,6 @@
 import { db } from "#src/lib/prisma.js";
 import logger from "#src/utils/logger.js";
+import { createIssueSchema } from "#src/validations/issue.validation.js";
 import { GoogleGenAI } from "@google/genai";
 import fs from "fs";
 const ai = new GoogleGenAI({});
@@ -41,7 +42,6 @@ export const getAllIssue = async (userId, orgId) => {
       category.issue.push(issue);
     }
   });
-    
 
   return { issueByCategory: issueCategory, issues: issue, count: issue.length };
 };
@@ -151,7 +151,7 @@ export const getIssueCategory = async (userId, orgId) => {
     throw error;
   }
 };
-export const getAiDesc = async (userId, orgId, image,desc) => {
+export const getAiDesc = async (userId, orgId, image, desc) => {
   if (!userId) {
     const error = new Error("Unauthorized");
     error.status = 401;
@@ -202,7 +202,7 @@ export const getAiDesc = async (userId, orgId, image,desc) => {
       "name": string | null,
       "description": string,
       "categoryId": string,
-      "imgUrl": null
+      "imgUrl": ""
     }
     
     Rules for issue JSON:
@@ -250,19 +250,19 @@ export const getAiDesc = async (userId, orgId, image,desc) => {
       error.status = 500;
       throw error;
     }
-    const cleanedText=response.replace(/```json/g, "")
-    .replace(/```/g, "")
-    .trim();
-    const issue=JSON.parse(cleanedText)
-    if(issue.status){
-        const error=new Error(issue.message)
-        error.status=400
-        throw error
+    const cleanedText = response
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .trim();
+    const issue = JSON.parse(cleanedText);
+    if (issue.status) {
+      const error = new Error(issue.message);
+      error.status = 400;
+      throw error;
     }
+    const issueData = createIssueSchema.parse(issue);
 
-    return issue
-
-
+    return issueData;
   } catch (error) {
     logger.error(error.message);
     throw error;
