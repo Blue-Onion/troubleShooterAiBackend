@@ -244,7 +244,12 @@ export const getAiDesc = async (userId, orgId, image,desc) => {
       contents: contents,
     });
 
-    const response=result.candidates[0].content.parts[0].text;
+    const response = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!response) {
+      const error = new Error("Invalid AI response structure");
+      error.status = 500;
+      throw error;
+    }
     const cleanedText=response.replace(/```json/g, "")
     .replace(/```/g, "")
     .trim();
