@@ -1,6 +1,7 @@
 import {
   creatingIssue,
   gettingAiDesc,
+  gettingIssue,
   gettingIssues,
 } from "#src/controllers/issue.controller.js";
 import { authenticate } from "#src/middleware/auth.middleware.js";
@@ -33,6 +34,6 @@ router.post(
   creatingIssue
 );
 router.get("/get-issues/:orgId", gettingIssues);
-router.get("/get-issue/:orgId/:issueId", gettingIssues);
+router.get("/get-issue/:orgId/:issueId", gettingIssue);
 router.post("/get-ai-desc/:orgId", upload.single("image"), gettingAiDesc);
 export default router;

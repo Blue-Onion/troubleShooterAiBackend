@@ -103,6 +103,12 @@ export const createIssue = async (userId, orgId, data) => {
       error.status = 404;
       throw error;
     }
+    const validIssuecateogry=issueCategory.find((item) => item.id === categoryId);
+    if(!validIssuecateogry){
+        const error=new Error("Invalid issue category id")
+        error.status=400
+        throw error
+    }
     const issue = await db.issue.create({
       data: {
         title: name,
@@ -243,6 +249,7 @@ export const getAiDesc = async (userId, orgId, image, desc) => {
       model: "gemini-2.5-flash",
       contents: contents,
     });
+    fs.unlinkSync(image.path);
 
     const response = result?.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!response) {
@@ -250,6 +257,7 @@ export const getAiDesc = async (userId, orgId, image, desc) => {
       error.status = 500;
       throw error;
     }
+
     const cleanedText = response
       .replace(/```json/g, "")
       .replace(/```/g, "")
@@ -265,6 +273,7 @@ export const getAiDesc = async (userId, orgId, image, desc) => {
     return issueData;
   } catch (error) {
     logger.error(error.message);
+    
     throw error;
   }
 };

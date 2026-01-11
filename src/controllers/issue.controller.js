@@ -15,6 +15,7 @@ export const creatingIssue = async (req, res) => {
     const { name, description, imgUrl, categoryId } = createIssueSchema.parse(
       req.body
     );
+    
     const issue = await createIssue(userId, orgId, {
       name,
       description,
