@@ -8,6 +8,7 @@ import logger from '#utils/logger.js';
 import authRoutes from '#routes/auth.route.js';
 import orgRoutes from '#routes/org.route.js';
 import issueRoutes from '#routes/issue.route.js';
+import adminRoutes from '#routes/admin.route.js';
 const app = express();
 
 // Security middleware (Helmet)
@@ -38,6 +39,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/org', orgRoutes);
 app.use('/api/issue', issueRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
