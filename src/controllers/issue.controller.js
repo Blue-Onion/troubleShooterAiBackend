@@ -44,17 +44,15 @@ export const gettingAiDesc=async(req,res)=>{
     const userId=req.user?.id
     const orgId=req.params.orgId
     const image=req.file
-    console.log(image);
-    
-
-
+    const desc=req.body?.desc
     try {
         if(!image){
             const error=new Error("No image uploaded")
             error.status=400
             throw error
         }
-        const issue=await getAiDesc(userId,orgId,image)
+
+        const issue=await getAiDesc(userId,orgId,image,desc)
 
         return res.status(201).json({issue})
     } catch (error) {

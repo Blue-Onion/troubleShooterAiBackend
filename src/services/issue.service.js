@@ -151,7 +151,7 @@ export const getIssueCategory = async (userId, orgId) => {
     throw error;
   }
 };
-export const getAiDesc = async (userId, orgId, image) => {
+export const getAiDesc = async (userId, orgId, image,desc) => {
   if (!userId) {
     const error = new Error("Unauthorized");
     error.status = 401;
@@ -184,7 +184,19 @@ export const getAiDesc = async (userId, orgId, image) => {
     
     Analyze the provided image carefully and infer the issue shown.
     
-    You MUST return a JSON object that strictly follows this schema:
+    ${
+      desc
+        ? `Additional user-provided description:
+    "${desc}"
+    
+    Use this description as supporting context. You may refine, clarify, or expand it, but do NOT contradict it.`
+        : `No additional user description is provided.`
+    }
+    
+    You MUST return ONE valid JSON object and NOTHING else.
+    
+    If the image OR the provided description contains enough information to identify an issue:
+    Return a JSON object that strictly follows this schema:
     
     {
       "name": string | null,
@@ -193,19 +205,29 @@ export const getAiDesc = async (userId, orgId, image) => {
       "imgUrl": null
     }
     
-    Rules:
-    - "description" must clearly explain the problem shown in the image.
+    Rules for issue JSON:
+    - "description" must clearly explain the problem shown in the image and/or described by the user.
+    - Prefer the user-provided description if it is clear and relevant.
     - "name" should be a short title (max 100 characters). If unsure, return null.
     - "categoryId" MUST be selected ONLY from the issue categories provided below.
-    - Choose the most relevant category based on the image context.
+    - Choose the most relevant category based on the image and description.
     - Do NOT invent categories.
+    
+    If BOTH the image AND the description do NOT contain enough information to confidently identify an issue:
+    Return this JSON instead:
+    
+    {
+      "status": "error",
+      "message": "Unable to identify a clear issue from the provided image and description."
+    }
+    
+    General rules:
     - Do NOT include explanations, markdown, or extra text.
+    - Do NOT wrap the response in code blocks.
     - Output ONLY valid JSON.
     
     Available issue categories:
     ${JSON.stringify(category, null, 2)}
-    
-    Return only the JSON object.
     `;
     const contents = [
       {
@@ -227,7 +249,12 @@ export const getAiDesc = async (userId, orgId, image) => {
     .replace(/```/g, "")
     .trim();
     const issue=JSON.parse(cleanedText)
-    
+    if(issue.status){
+        const error=new Error(issue.message)
+        error.status=issue.status
+        throw error
+    }
+
     return issue
 
 
@@ -236,3 +263,4 @@ export const getAiDesc = async (userId, orgId, image) => {
     throw error;
   }
 };
+//Save ImageUrl later
