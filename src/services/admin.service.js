@@ -52,7 +52,7 @@ export const decideIssue = async (userId, orgId, id, decision, priority) => {
     const issue = await db.issue.findUnique({
       where: {
         id: id,
-        organizationId:orgId
+        organizationId: orgId,
       },
     });
     if (!issue) {
@@ -60,13 +60,13 @@ export const decideIssue = async (userId, orgId, id, decision, priority) => {
       error.status = 404;
       throw error;
     }
-    const updatedIssue=await db.issue.update({
-        where: { id },
-        data: {
-          status: decision,
-          priority,
-        },
-      });
+    const updatedIssue = await db.issue.update({
+      where: { id },
+      data: {
+        status: decision,
+        priority,
+      },
+    });
     return updatedIssue;
   } catch (error) {
     logger.error(error.message);
@@ -134,6 +134,77 @@ export const decideRequest = async (userId, orgId, id, decision) => {
       },
     });
     return updatedMemberShip;
+  } catch (error) {
+    logger.error(error.message);
+    throw error;
+  }
+};
+export const assignIssue = async (userId, orgId, issueId, staffId) => {
+  if (!userId) {
+    const error = new Error("Invalid id");
+    error.status = 400;
+    throw error;
+  }
+  if (!orgId) {
+    const error = new Error("Invalid organization id");
+    error.status = 400;
+    throw error;
+  }
+  if (!issueId) {
+    const error = new Error("Invalid issue id");
+    error.status = 400;
+    throw error;
+  }
+  if (!staffId) {
+    const error = new Error("Invalid staff id");
+    error.status = 400;
+    throw error;
+  }
+  try {
+    const isAdmin = await db.membership.findUnique({
+      where: {
+        userId_orgId: {
+          userId: userId,
+          organizationId: orgId,
+        },
+      },
+    });
+    if (isAdmin?.role !== "ADMIN") {
+      const error = new Error("Only Admin can assign issue");
+      error.status = 403;
+      throw error;
+    }
+    const issue = await db.issue.findUnique({
+      where: {
+        id: issueId,
+        organizationId: orgId,
+      },
+    });
+    if (!issue) {
+      const error = new Error("No issue found");
+      error.status = 404;
+      throw error;
+    }
+    const staff = await db.staff.findUnique({
+      where: {
+        id: staffId,
+        organizationId: orgId,
+      },
+    });
+    if (!staff) {
+      const error = new Error("No staff found");
+      error.status = 404;
+      throw error;
+    }
+    const updatedIssue = await db.issue.update({
+      where: {
+        id: issueId,
+      },
+      data: {
+        assignedTo: staffId,
+      },
+    });
+    return updatedIssue;
   } catch (error) {
     logger.error(error.message);
     throw error;
