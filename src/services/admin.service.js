@@ -1,5 +1,6 @@
 import { db } from "#src/lib/prisma.js";
 import logger from "#src/utils/logger.js";
+import { log } from "node:console";
 const allowedMemberShipDecisions = ["ACCEPTED", "REJECTED", "SUSPENDED"];
 const allowedIssueDecisions = [
   "PENDING",
@@ -190,12 +191,17 @@ export const assignIssue = async (userId, orgId, issueId, staffId) => {
       error.status = 404;
       throw error;
     }
-    const staff = await db.staff.findUnique({
+    console.log(issue);
+    const staff = await db.membership.findUnique({
       where: {
-        id: staffId,
-        organizationId: orgId,
+        userId_organizationId: {
+          userId: staffId,
+          organizationId: orgId,
+        },
       },
     });
+    console.log(staff);
+    
     if (!staff) {
       const error = new Error("No staff found");
       error.status = 404;
@@ -206,7 +212,7 @@ export const assignIssue = async (userId, orgId, issueId, staffId) => {
         id: issueId,
       },
       data: {
-        assignedTo: staffId,
+        assignedToId: staffId,
       },
     });
     return updatedIssue;

@@ -13,13 +13,7 @@ export const decidingIssue = async (req, res) => {
 
   try {
     const { id, decision, priority } = decideIssueSchema.parse(req.body);
-    console.log({
-      userId,
-      orgId,
-      id,
-      decision,
-      priority,
-    });
+
     const verdict = await decideIssue(userId, orgId, id, decision, priority);
     return res.status(200).json({
       success: true,
@@ -35,8 +29,8 @@ export const decidingIssue = async (req, res) => {
   }
 };
 export const decidingStaff = async (req, res) => {
-  const userId = req.body.userId;
-  const orgId = req.body.orgId;
+    const userId = req.user?.id;
+    const orgId = req.params?.orgId;
   try {
     const { id, decision } = decideStaffSchema.parse(req.body);
     const verdict = await decideRequest(userId, orgId, id, decision);
@@ -54,8 +48,8 @@ export const decidingStaff = async (req, res) => {
   }
 };
 export const assigningIssue = async (req, res) => {
-  const userId = req.body.userId;
-  const orgId = req.body.orgId;
+    const userId = req.user?.id;
+    const orgId = req.params?.orgId;
   try {
     const { id, staffId } = assigningIssueSchema.parse(req.body);
     const verdict = await assignIssue(userId, orgId, id, staffId);
