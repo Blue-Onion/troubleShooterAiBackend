@@ -6,11 +6,20 @@ import {
   decideStaffSchema,
 } from "#src/validations/admin.validation.js";
 
+
 export const decidingIssue = async (req, res) => {
-  const userId = req.body.userId;
-  const orgId = req.body.orgId;
+  const userId = req.user?.id;
+  const orgId = req.params?.orgId;
+
   try {
     const { id, decision, priority } = decideIssueSchema.parse(req.body);
+    console.log({
+      userId,
+      orgId,
+      id,
+      decision,
+      priority,
+    });
     const verdict = await decideIssue(userId, orgId, id, decision, priority);
     return res.status(200).json({
       success: true,

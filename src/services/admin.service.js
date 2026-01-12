@@ -1,4 +1,5 @@
 import { db } from "#src/lib/prisma.js";
+import logger from "#src/utils/logger.js";
 const allowedMemberShipDecisions = ["ACCEPTED", "REJECTED", "SUSPENDED"];
 const allowedIssueDecisions = [
   "PENDING",
@@ -36,14 +37,18 @@ export const decideIssue = async (userId, orgId, id, decision, priority) => {
     if (!allowedPriority.includes(priority)) {
       throw Object.assign(new Error("Invalid priority"), { status: 400 });
     }
+    console.log(userId, orgId, id, decision, priority);
+    
     const isAdmin = await db.membership.findUnique({
       where: {
-        userId_orgId: {
+        userId_organizationId: {
           userId: userId,
           organizationId: orgId,
         },
       },
     });
+    console.log(isAdmin);
+    
     if (isAdmin?.role !== "ADMIN") {
       const error = new Error("Only admin can update issues");
       error.status = 403;
@@ -98,7 +103,7 @@ export const decideRequest = async (userId, orgId, id, decision) => {
     }
     const isAdmin = await db.membership.findUnique({
       where: {
-        userId_orgId: {
+        userId_organizationId: {
           userId: userId,
           organizationId: orgId,
         },
@@ -111,7 +116,7 @@ export const decideRequest = async (userId, orgId, id, decision) => {
     }
     const memberShip = await db.membership.findUnique({
       where: {
-        userId_orgId: {
+        userId_organizationId: {
           userId: id,
           organizationId: orgId,
         },
@@ -124,7 +129,7 @@ export const decideRequest = async (userId, orgId, id, decision) => {
     }
     const updatedMemberShip = await db.membership.update({
       where: {
-        userId_orgId: {
+        userId_organizationId: {
           userId: id,
           organizationId: orgId,
         },
@@ -163,7 +168,7 @@ export const assignIssue = async (userId, orgId, issueId, staffId) => {
   try {
     const isAdmin = await db.membership.findUnique({
       where: {
-        userId_orgId: {
+        userId_organizationId: {
           userId: userId,
           organizationId: orgId,
         },
