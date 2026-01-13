@@ -66,3 +66,21 @@ export const assigningIssue = async (req, res) => {
     });
   }
 };
+export const pendingApplicants = async (req, res) => {
+    const userId = req.user?.id;
+    const orgId = req.params?.orgId;
+  try {
+    const verdict = await pendingApplicants(userId, orgId);
+    return res.status(200).json({
+      success: true,
+      message: "Pending applicants fetched successfully",
+      data: verdict,
+    });
+  } catch (error) {
+    logger.error(error.message);
+    return res.status(error.status || 400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
