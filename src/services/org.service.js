@@ -104,6 +104,7 @@ export const createOrg = async (userId, data) => {
           userId,
           organizationId: org.id,
           role: "ADMIN",
+          status:"ACCEPTED",
         },
       });
 
