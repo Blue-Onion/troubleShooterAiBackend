@@ -1,6 +1,6 @@
 import { db } from "#src/lib/prisma.js";
 import logger from "#src/utils/logger.js";
-import { log } from "node:console";
+
 const allowedMemberShipDecisions = ["ACCEPTED", "REJECTED", "SUSPENDED"];
 const allowedIssueDecisions = [
   "PENDING",
@@ -221,3 +221,40 @@ export const assignIssue = async (userId, orgId, issueId, staffId) => {
     throw error;
   }
 };
+export const pendingApplicants=async(userId,orgId)=>{
+    try {
+        if(!userId){
+            const error=new Error("Invalid id");
+            error.status=400;
+            throw error;
+        }
+        if(!orgId){
+            const error=new Error("Invalid organization id");
+            error.status=400;
+            throw error;
+        }
+        const isAdmin=await db.membership.findUnique({
+            where:{
+                userId_organizationId:{
+                    userId:userId,
+                    organizationId:orgId,
+                },
+            },
+        })
+        if(isAdmin?.role!="ADMIN"){
+            const error=new Error("Only Admin can view pending applicants");
+            error.status=403;
+            throw error;
+        }
+        const pendingApplicants=await db.membership.findMany({
+            where:{
+                organizationId:orgId,
+                status:"PENDING",
+            },
+        })
+        return pendingApplicants;
+    } catch (error) {
+        logger.error(error.message);
+        throw error;
+    }
+}
