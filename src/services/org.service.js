@@ -184,18 +184,18 @@ export const leaveOrg = async (userId, orgId) => {
   try {
     return db.$transaction(async (tx) => {
       if (membership.role === "ADMIN") {
-        const adminCount = await tx.membership.count({
-          where: {
-            organizationId: orgId,
-            role: "ADMIN",
-          },
-        });
         const membership = await tx.membership.findUnique({
           where: {
             userId_organizationId: {
               userId,
               organizationId: orgId,
             },
+          },
+        });
+        const adminCount = await tx.membership.count({
+          where: {
+            organizationId: orgId,
+            role: "ADMIN",
           },
         });
 
@@ -233,36 +233,33 @@ export const deleteOrg = async (userId, orgId) => {
   }
   try {
     return await db.$transaction(async (tx) => {
- 
-        const membership = await tx.membership.findUnique({
-          where: {
-            userId_organizationId: {
-              userId,
-              organizationId: orgId,
-            },
+      const membership = await tx.membership.findUnique({
+        where: {
+          userId_organizationId: {
+            userId,
+            organizationId: orgId,
           },
-          include: {
-            organization: true,
-          },
-        });
+        },
+        include: {
+          organization: true,
+        },
+      });
 
-        if (!membership) {
-          const error = new Error("Forbidden");
-          error.status = 403;
-          throw error;
-        }
-        if (membership.role !== "ADMIN") {
-          const error = new Error("Only admin can delete organization");
-          error.status = 403;
-          throw error;
-        }
+      if (!membership) {
+        const error = new Error("Forbidden");
+        error.status = 403;
+        throw error;
+      }
+      if (membership.role !== "ADMIN") {
+        const error = new Error("Only admin can delete organization");
+        error.status = 403;
+        throw error;
+      }
       if (!membership.organization) {
         const error = new Error("Organization not found");
         error.status = 404;
         throw error;
       }
-
-
 
       await tx.issue.deleteMany({
         where: { organizationId: orgId },
