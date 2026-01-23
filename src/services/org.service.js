@@ -183,23 +183,22 @@ export const leaveOrg = async (userId, orgId) => {
 
   try {
     return db.$transaction(async (tx) => {
-      if (membership.role === "ADMIN") {
-        const membership = await tx.membership.findUnique({
-          where: {
-            userId_organizationId: {
-              userId,
-              organizationId: orgId,
-            },
+      const membership = await tx.membership.findUnique({
+        where: {
+          userId_organizationId: {
+            userId,
+            organizationId: orgId,
           },
-        });
+        },
+      });
+      if (!membership) throw new Error("Not a member of this organization");
+      if (membership.role === "ADMIN") {
         const adminCount = await tx.membership.count({
           where: {
             organizationId: orgId,
             role: "ADMIN",
           },
         });
-
-        if (!membership) throw new Error("Not a member of this organization");
 
         if (adminCount <= 1) {
           throw new Error("Organization must have at least one admin");
