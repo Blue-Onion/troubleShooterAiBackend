@@ -81,7 +81,7 @@ export const createOrg = async (userId, data) => {
           .replace(/\s+/g, "-")
           .replace(/-+/g, "-")
           .replace(/(^-|-$)/g, "");
-        finalSlug = `${baseSlug(name)}-${randomHex(4)}`;
+        finalSlug = `${baseSlug}-${randomHex(4)}`;
       }
 
       const org = await tx.organization.create({
