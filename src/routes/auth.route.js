@@ -11,7 +11,7 @@ router.post('/register', validate(registerSchema), register);
 router.post('/login', validate(loginSchema), login);
 
 // Protected routes
-router.post('/logout', authenticate, logout);
+router.get('/logout', authenticate, logout);
 router.get('/me', authenticate, getMe);
 
 export default router;
