@@ -1,5 +1,6 @@
 import { db } from "#src/lib/prisma.js";
 import logger from "#src/utils/logger.js";
+import { webcrypto as crypto } from "node:crypto";
 const randomHex = (len = 4) => {
   return [...crypto.getRandomValues(new Uint8Array(len / 2))]
     .map((b) => b.toString(16).padStart(2, "0"))
