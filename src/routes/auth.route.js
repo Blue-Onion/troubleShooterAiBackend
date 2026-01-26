@@ -1,18 +1,20 @@
-import express from 'express';
-import { register, login, logout, getMe } from '#controllers/auth.controller.js';
-import { validate } from '#middleware/validation.middleware.js';
-import { registerSchema, loginSchema } from '#validations/auth.validation.js';
-import { authenticate } from '#middleware/auth.middleware.js';
+import express from "express";
+import {
+  register,
+  login,
+  logout,
+  getMe,
+} from "#controllers/auth.controller.js";
+import { authenticate } from "#middleware/auth.middleware.js";
 
 const router = express.Router();
 
 // Public routes
-router.post('/register', validate(registerSchema), register);
-router.post('/login', validate(loginSchema), login);
+router.post("/register", register);
+router.post("/login", login);
 
 // Protected routes
-router.get('/logout', authenticate, logout);
-router.get('/me', authenticate, getMe);
+router.get("/logout", authenticate, logout);
+router.get("/me", authenticate, getMe);
 
 export default router;
-
