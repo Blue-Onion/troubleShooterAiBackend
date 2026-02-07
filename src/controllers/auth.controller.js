@@ -1,7 +1,6 @@
 import {
   registerUser,
   loginUser,
-  getUserById,
   generateToken,
 } from "#services/auth.service.js";
 import {
@@ -13,9 +12,19 @@ import logger from "#utils/logger.js";
 /**
  * Register a new user
  */
-export const register = async (req, res, next) => {
+export const register = async (req, res) => {
   try {
     const { email, password, name } = registerSchema.parse(req.body);
+    if (!email) {
+      const error = new Error("Invalid email");
+      error.status = 400;
+      throw error;
+    }
+    if (!password || password.length < 8) {
+      const error = new Error("Invalid password");
+      error.status = 400;
+      throw error;
+    }
     const user = await registerUser({ email, password, name });
     const token = generateToken(user.id);
 
@@ -34,23 +43,24 @@ export const register = async (req, res, next) => {
     });
   } catch (error) {
     logger.error("Registration error:", error);
-
-    if (error.message === "User with this email already exists") {
-      return res.status(409).json({
-        error: error.message,
-      });
-    } else {
-      return res.status(400).json({
-        error: error.message,
-      });
-    }
+    if (error.name === "ZodError") {
+        const JsonErr=JSON.parse(error.message);
+        return res.status(400).json({
+          error: JsonErr.map(err=>{
+            return err.message;
+          })
+        });
+      }
+    res
+      .status(error.status || 500)
+      .json({ error: error.message });
   }
 };
 
 /**
  * Login a user
  */
-export const login = async (req, res, next) => {
+export const login = async (req, res) => {
   try {
     const { email, password } = loginSchema.parse(req.body);
     const { user, token } = await loginUser(email, password);
@@ -70,15 +80,7 @@ export const login = async (req, res, next) => {
     });
   } catch (error) {
     logger.error("Login error:", error);
-    if (error.message === "Invalid email or password") {
-      return res.status(401).json({
-        error: error.message,
-      });
-    } else {
-      return res.status(400).json({
-        error: error.message,
-      });
-    }
+    res.status(error.status || 500).json({ error: error.message });
   }
 };
 

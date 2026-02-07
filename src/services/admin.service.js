@@ -39,7 +39,7 @@ export const decideIssue = async (userId, orgId, id, decision, priority) => {
       throw Object.assign(new Error("Invalid priority"), { status: 400 });
     }
     console.log(userId, orgId, id, decision, priority);
-    
+
     const isAdmin = await db.membership.findUnique({
       where: {
         userId_organizationId: {
@@ -49,7 +49,7 @@ export const decideIssue = async (userId, orgId, id, decision, priority) => {
       },
     });
     console.log(isAdmin);
-    
+
     if (isAdmin?.role !== "ADMIN") {
       const error = new Error("Only admin can update issues");
       error.status = 403;
@@ -201,7 +201,7 @@ export const assignIssue = async (userId, orgId, issueId, staffId) => {
       },
     });
     console.log(staff);
-    
+
     if (!staff) {
       const error = new Error("No staff found");
       error.status = 404;
@@ -221,40 +221,40 @@ export const assignIssue = async (userId, orgId, issueId, staffId) => {
     throw error;
   }
 };
-export const pendingApplicants=async(userId,orgId)=>{
-    try {
-        if(!userId){
-            const error=new Error("Invalid id");
-            error.status=400;
-            throw error;
-        }
-        if(!orgId){
-            const error=new Error("Invalid organization id");
-            error.status=400;
-            throw error;
-        }
-        const isAdmin=await db.membership.findUnique({
-            where:{
-                userId_organizationId:{
-                    userId:userId,
-                    organizationId:orgId,
-                },
-            },
-        })
-        if(isAdmin?.role!="ADMIN"){
-            const error=new Error("Only Admin can view pending applicants");
-            error.status=403;
-            throw error;
-        }
-        const pendingApplicants=await db.membership.findMany({
-            where:{
-                organizationId:orgId,
-                status:"PENDING",
-            },
-        })
-        return pendingApplicants;
-    } catch (error) {
-        logger.error(error.message);
-        throw error;
+export const pendingApplicants = async (userId, orgId) => {
+  try {
+    if (!userId) {
+      const error = new Error("Invalid id");
+      error.status = 400;
+      throw error;
     }
-}
+    if (!orgId) {
+      const error = new Error("Invalid organization id");
+      error.status = 400;
+      throw error;
+    }
+    const isAdmin = await db.membership.findUnique({
+      where: {
+        userId_organizationId: {
+          userId: userId,
+          organizationId: orgId,
+        },
+      },
+    });
+    if (isAdmin?.role != "ADMIN") {
+      const error = new Error("Only Admin can view pending applicants");
+      error.status = 403;
+      throw error;
+    }
+    const pendingApplicants = await db.membership.findMany({
+      where: {
+        organizationId: orgId,
+        status: "PENDING",
+      },
+    });
+    return pendingApplicants;
+  } catch (error) {
+    logger.error(error.message);
+    throw error;
+  }
+};

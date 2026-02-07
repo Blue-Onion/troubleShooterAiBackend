@@ -56,7 +56,6 @@ export const joiningOrg = async (req, res) => {
 
   try {
     const data = joinOrgSchema.parse(req.body);
-
     const membership = await joinOrg(userId, id, data);
     return res.status(201).json(membership);
   } catch (error) {
