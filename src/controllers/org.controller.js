@@ -6,7 +6,7 @@ import {
   joinOrg,
   leaveOrg,
 } from "#src/services/org.service.js";
-import logger from "#src/utils/logger.js";
+
 import {
   createOrgSchema,
   joinOrgSchema,

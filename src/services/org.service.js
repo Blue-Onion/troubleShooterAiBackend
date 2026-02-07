@@ -153,7 +153,7 @@ export const joinOrg = async (userId, orgId, data) => {
         if (jobCategory.organizationId !== orgId) {
           throw new Error("Job category does not belong to this organization");
         }
-
+        
         return tx.membership.create({
           data: {
             userId,
