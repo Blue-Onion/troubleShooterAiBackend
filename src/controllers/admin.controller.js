@@ -21,11 +21,15 @@ export const decidingIssue = async (req, res) => {
       data: verdict,
     });
   } catch (error) {
-    logger.error(error.message);
-    return res.status(error.status || 400).json({
-      success: false,
-      message: error.message,
-    });
+    if (error.name === "ZodError") {
+      const JsonErr = JSON.parse(error.message);
+      return res.status(400).json({
+        error: JsonErr.map((err) => {
+          return err.message;
+        }),
+      });
+    }
+    res.status(error.status || 500).json({ error: error.message });
   }
 };
 export const decidingStaff = async (req, res) => {
@@ -40,11 +44,15 @@ export const decidingStaff = async (req, res) => {
       data: verdict,
     });
   } catch (error) {
-    logger.error(error.message);
-    return res.status(error.status || 400).json({
-      success: false,
-      message: error.message,
-    });
+    if (error.name === "ZodError") {
+      const JsonErr = JSON.parse(error.message);
+      return res.status(400).json({
+        error: JsonErr.map((err) => {
+          return err.message;
+        }),
+      });
+    }
+    res.status(error.status || 500).json({ error: error.message });
   }
 };
 export const assigningIssue = async (req, res) => {
@@ -59,11 +67,15 @@ export const assigningIssue = async (req, res) => {
       data: verdict,
     });
   } catch (error) {
-    logger.error(error.message);
-    return res.status(error.status || 400).json({
-      success: false,
-      message: error.message,
-    });
+    if (error.name === "ZodError") {
+      const JsonErr = JSON.parse(error.message);
+      return res.status(400).json({
+        error: JsonErr.map((err) => {
+          return err.message;
+        }),
+      });
+    }
+    res.status(error.status || 500).json({ error: error.message });
   }
 };
 export const pendingApplicants = async (req, res) => {
