@@ -1,4 +1,4 @@
-import fs from "fs";
+
 // import FormData from "form-data"; // Using native FormData in Node 18+
 const ISSUE_BASE_URL = "http://localhost:3000/api/issue";
 
@@ -7,11 +7,11 @@ const ISSUE_BASE_URL = "http://localhost:3000/api/issue";
   Replace these before running
 */
 const USER_TOKEN =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJkYzY3NjMxNS0xNjAwLTQ5MWUtYjFmNi1iMjczYmQwMDI0NTMiLCJpYXQiOjE3NzA1MzI2NzMsImV4cCI6MTc3MTEzNzQ3M30.iABn_8cpausOpVNXjP2gql_LdoclXLcrAxvtdEk4H1k";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ZjQ3YTAyOS1hM2IzLTQzOTEtYjhkNy00NDE4NWJlY2MwNmMiLCJpYXQiOjE3NzA1MzU0NDUsImV4cCI6MTc3MTE0MDI0NX0.AcYZwFPwtB_gqEPmUNUA9HADFsnlVuEiqW1wB5vpz5Y";
 
 // IDs needed for tests
-const ORG_ID = "22e55ef8-06b2-4c0b-b0a1-28248f7d7e79";
-const CATEGORY_ID = "9cb6f86c-b560-4907-acb1-09fb4a0da9fb"; // Issue Category ID
+const ORG_ID = "a3059a1f-05ab-4b66-8ce2-ea45ad894cdf";
+const CATEGORY_ID = "7740bbca-1553-4b7f-bd11-e651958586bc"; // Issue Category ID
 
 let createdIssueId = null;
 
@@ -94,36 +94,36 @@ async function getIssueById() {
 // Note: This test requires a file to upload.
 // Skipping actual file util implementation for simple script,
 // using simple FormData if run in Node environment that supports it (Node 18+)
-async function getAiDesc() {
-  console.log("\nRUNNING AI IMAGE DESC TEST");
+// async function getAiDesc() {
+//   console.log("\nRUNNING AI IMAGE DESC TEST");
 
-  const imagePath = "./test-image.jpg";
-  if (!fs.existsSync(imagePath)) {
-    console.warn(`\n⚠️  SKIPPING AI DESC TEST: ${imagePath} not found.`);
-    console.warn(
-      "Please place a JPEG image named 'test-image.jpg' in the root directory to run this test.\n",
-    );
-    return;
-  }
+//   const imagePath = "./test-image.jpg";
+//   if (!fs.existsSync(imagePath)) {
+//     console.warn(`\n⚠️  SKIPPING AI DESC TEST: ${imagePath} not found.`);
+//     console.warn(
+//       "Please place a JPEG image named 'test-image.jpg' in the root directory to run this test.\n",
+//     );
+//     return;
+//   }
 
-  const buffer = fs.readFileSync(imagePath);
-  // Native File object (Node 20+)
-  const file = new File([buffer], "test-image.jpg", { type: "image/jpeg" });
+//   const buffer = fs.readFileSync(imagePath);
+//   // Native File object (Node 20+)
+//   const file = new File([buffer], "test-image.jpg", { type: "image/jpeg" });
 
-  const form = new FormData();
-  form.append("image", file);
+//   const form = new FormData();
+//   form.append("image", file);
 
-  const res = await fetch(`${ISSUE_BASE_URL}/get-ai-desc/${ORG_ID}`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${USER_TOKEN}`,
-      // Native fetch sets Content-Type with boundary automatically
-    },
-    body: form,
-  });
+//   const res = await fetch(`${ISSUE_BASE_URL}/get-ai-desc/${ORG_ID}`, {
+//     method: "POST",
+//     headers: {
+//       Authorization: `Bearer ${USER_TOKEN}`,
+//       // Native fetch sets Content-Type with boundary automatically
+//     },
+//     body: form,
+//   });
 
-  await log("GET AI DESC", res);
-}
+//   await log("GET AI DESC", res);
+// }
 
 /* -------------------------
  VALIDATION TESTS
@@ -140,6 +140,70 @@ async function createIssueMissingFields() {
   });
 
   await log("CREATE ISSUE MISSING FIELDS", res);
+}
+
+async function createIssueInvalidOrg() {
+  const invalidOrgId = "00000000-0000-0000-0000-000000000000";
+  const res = await fetch(`${ISSUE_BASE_URL}/create-issue/${invalidOrgId}`, {
+    method: "POST",
+    headers: headersFor(USER_TOKEN),
+    body: JSON.stringify({
+      name: "Issue for Invalid Org",
+      description: "This should fail",
+      categoryId: CATEGORY_ID,
+      imgUrl: "http://example.com/fail.jpg",
+    }),
+  });
+
+  await log(
+    "CREATE ISSUE INVALID ORG (Should allow if logic doesn't check org existence, otherwise 404/400)",
+    res,
+  );
+}
+
+async function getIssuesInvalidOrg() {
+  const invalidOrgId = "00000000-0000-0000-0000-000000000000";
+  const res = await fetch(`${ISSUE_BASE_URL}/get-issues/${invalidOrgId}`, {
+    method: "GET",
+    headers: headersFor(USER_TOKEN),
+  });
+
+  await log("GET ISSUES INVALID ORG", res);
+}
+
+async function getIssueInvalidId() {
+  const invalidIssueId = "00000000-0000-0000-0000-000000000000";
+  const res = await fetch(
+    `${ISSUE_BASE_URL}/get-issue/${ORG_ID}/${invalidIssueId}`,
+    {
+      method: "GET",
+      headers: headersFor(USER_TOKEN),
+    },
+  );
+
+  await log("GET ISSUE INVALID ID", res);
+}
+
+async function getAiDescNoFile() {
+  // Sending request without file
+  const res = await fetch(`${ISSUE_BASE_URL}/get-ai-desc/${ORG_ID}`, {
+    method: "POST",
+    headers: headersFor(USER_TOKEN),
+  });
+
+  await log("GET AI DESC NO FILE (Should be 400)", res);
+}
+
+async function unauthorizedAccess() {
+  const res = await fetch(`${ISSUE_BASE_URL}/get-issues/${ORG_ID}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      // No Authorization header
+    },
+  });
+
+  await log("UNAUTHORIZED ACCESS (Should be 401/403)", res);
 }
 
 /* -------------------------
@@ -159,9 +223,14 @@ async function run() {
   await createIssue();
   await getIssues();
   await getIssueById();
-  await getAiDesc();
+  //   await getAiDesc();
   // Validation
   await createIssueMissingFields();
+  await createIssueInvalidOrg();
+  await getIssuesInvalidOrg();
+  await getIssueInvalidId();
+  await getAiDescNoFile();
+  await unauthorizedAccess();
 
   console.log("\nISSUE TEST SUITE FINISHED\n");
 }

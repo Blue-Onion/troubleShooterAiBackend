@@ -221,7 +221,7 @@ export const assignIssue = async (userId, orgId, issueId, staffId) => {
     throw error;
   }
 };
-export const pendingApplicants = async (userId, orgId) => {
+export const getPendingApplicants = async (userId, orgId) => {
   try {
     if (!userId) {
       const error = new Error("Invalid id");
@@ -233,6 +233,7 @@ export const pendingApplicants = async (userId, orgId) => {
       error.status = 400;
       throw error;
     }
+
     const isAdmin = await db.membership.findUnique({
       where: {
         userId_organizationId: {
@@ -242,7 +243,11 @@ export const pendingApplicants = async (userId, orgId) => {
       },
     });
     if (isAdmin?.role != "ADMIN") {
-      const error = new Error("Only Admin can view pending applicants");
+      const error = new Error(JSON.stringify({
+        orgId:orgId,
+        userId:userId,
+        isAdmin:isAdmin
+      }));
       error.status = 403;
       throw error;
     }

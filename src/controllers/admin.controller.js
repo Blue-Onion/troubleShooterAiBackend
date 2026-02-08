@@ -1,4 +1,4 @@
-import { assignIssue, decideIssue, decideRequest } from "#src/services/admin.service.js";
+import { assignIssue, decideIssue, decideRequest, getPendingApplicants } from "#src/services/admin.service.js";
 import logger from "#src/utils/logger.js";
 import {
     assigningIssueSchema,
@@ -10,6 +10,16 @@ import {
 export const decidingIssue = async (req, res) => {
   const userId = req.user?.id;
   const orgId = req.params?.orgId;
+  if (!userId) {
+    return res.status(400).json({
+      error: "Missing user ID",
+    });
+  }
+  if (!orgId) {
+    return res.status(400).json({
+      error: "Missing organization ID",
+    });
+  }
 
   try {
     const { id, decision, priority } = decideIssueSchema.parse(req.body);
@@ -35,11 +45,21 @@ export const decidingIssue = async (req, res) => {
 export const decidingStaff = async (req, res) => {
     const userId = req.user?.id;
     const orgId = req.params?.orgId;
+    if (!userId) {
+        return res.status(400).json({
+          error: "Missing user ID",
+        });
+      }
+      if (!orgId) {
+        return res.status(400).json({
+          error: "Missing organization ID",
+        });
+      }
   try {
     const { id, decision } = decideStaffSchema.parse(req.body);
     const verdict = await decideRequest(userId, orgId, id, decision);
     return res.status(200).json({
-      success: true,
+      
       message: "Staff decided successfully",
       data: verdict,
     });
@@ -58,11 +78,21 @@ export const decidingStaff = async (req, res) => {
 export const assigningIssue = async (req, res) => {
     const userId = req.user?.id;
     const orgId = req.params?.orgId;
+    if (!userId) {
+        return res.status(400).json({
+          error: "Missing user ID",
+        });
+      }
+      if (!orgId) {
+        return res.status(400).json({
+          error: "Missing organization ID",
+        });
+      }
   try {
     const { id, staffId } = assigningIssueSchema.parse(req.body);
     const verdict = await assignIssue(userId, orgId, id, staffId);
     return res.status(200).json({
-      success: true,
+      
       message: "Issue assigned successfully",
       data: verdict,
     });
@@ -81,18 +111,26 @@ export const assigningIssue = async (req, res) => {
 export const pendingApplicants = async (req, res) => {
     const userId = req.user?.id;
     const orgId = req.params?.orgId;
+    if (!userId) {
+      return res.status(400).json({
+        error: "Missing user ID",
+      });
+    }
+    if (!orgId) {
+      return res.status(400).json({
+        error: "Missing organization ID",
+      });
+    }
+    
   try {
-    const verdict = await pendingApplicants(userId, orgId);
+    const verdict = await getPendingApplicants(userId, orgId);
     return res.status(200).json({
-      success: true,
+      
       message: "Pending applicants fetched successfully",
       data: verdict,
     });
   } catch (error) {
     logger.error(error.message);
-    return res.status(error.status || 400).json({
-      success: false,
-      message: error.message,
-    });
+    res.status(error.status || 500).json({ error: error.message });
   }
 };

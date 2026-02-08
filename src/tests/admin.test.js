@@ -1,16 +1,24 @@
 const ADMIN_BASE_URL = "http://localhost:3000/api/admin";
 
 /*
-  TOKENS FROM auth.test.js / org.test.js
-  Replace these before running
+  TOKENS (replace)
 */
-const USER_A_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJkYzY3NjMxNS0xNjAwLTQ5MWUtYjFmNi1iMjczYmQwMDI0NTMiLCJpYXQiOjE3NzA1MzQ2MzksImV4cCI6MTc3MTE0MDQzOX0.38112j680589707729716160299273741111111";
-const USER_B_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJhNGNjYjRhOS1jMjE0LTQ1MjAtOTEwMS1kYWFkNGE1MmNiMTUiLCJpYXQiOjE3NzA1MzQ0NTYsImV4cCI6MTc3MTEzOTI1Nn0.Orpk2THltWLvu0RrVCtdbBdd4ynN1SMKen9CvgyDstU";
+const ADMIN_TOKEN =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI3ZjU2YWRkZi00OTlhLTRjNmQtYmNhYy1hMzdlZmY3MmZhMGIiLCJpYXQiOjE3NzA1MzU1NTksImV4cCI6MTc3MTE0MDM1OX0.8QaOSaddMbdzSD9mgTmJ-XxZ2-6O2p9bp10G-mvIQl0";
 
-// IDs needed for tests - populate these after creating resources or from DB
-const ORG_ID = "22e55ef8-06b2-4c0b-b0a1-28248f7d7e79";
-const ISSUE_ID = "1e311116-7743-4637-a74d-92751de93d79";
-const STAFF_ID = "b82d1b20-e2f2-48db-a236-92fccf199f26"; // User ID of a pending/member staff
+const MEMBER_TOKEN =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ZjQ3YTAyOS1hM2IzLTQzOTEtYjhkNy00NDE4NWJlY2MwNmMiLCJpYXQiOjE3NzA1MzU0NDUsImV4cCI6MTc3MTE0MDI0NX0.AcYZwFPwtB_gqEPmUNUA9HADFsnlVuEiqW1wB5vpz5Y";
+
+const STAFF_TOKEN =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIzMDlkMmJmNy1jMDhlLTRlN2ItYWFhMC05ZTUyY2ZkZjAzYTAiLCJpYXQiOjE3NzA1MzU1NTksImV4cCI6MTc3MTE0MDM1OX0.prcgXOnJO9-yQGd_-QbT3PJO1SSngeF99iZ6fSvJJEU";
+
+/*
+  IDS (replace)
+*/
+const ORG_ID = "a3059a1f-05ab-4b66-8ce2-ea45ad894cdf";
+const ISSUE_ID = "0cd6b5b0-421a-4737-87a3-6269a1579013";
+const STAFF_ID = "c7b7f777-97dc-4ada-8902-ff3311e5c3ed";
+const MEMBER_ID = "f0c8af8e-a47e-45ec-a487-d04e0064ec4b";
 
 /* -------------------------
  Helpers
@@ -21,134 +29,183 @@ const headersFor = (token) => ({
   Authorization: `Bearer ${token}`,
 });
 
-const log = async (title, res) => {
-  let data;
+async function log(title, res) {
+  let data = {};
   try {
     data = await res.json();
-  } catch {
-    data = {};
-  }
+  } catch {}
 
   console.log(`\n${title}`);
   console.log("STATUS:", res.status);
   console.log("DATA:", JSON.stringify(data, null, 2));
-};
+}
 
-/* -------------------------
+async function post(url, token, body) {
+  return fetch(url, {
+    method: "POST",
+    headers: headersFor(token),
+    body: JSON.stringify(body),
+  });
+}
+
+/* =========================
  ADMIN TESTS
--------------------------- */
+========================= */
 
-async function getPendingApplicants() {
-  const res = await fetch(`${ADMIN_BASE_URL}/${ORG_ID}/pending-applicants`, {
-    method: "GET",
-    headers: headersFor(USER_A_TOKEN),
-  });
+async function adminGetPending() {
+  const res = await fetch(
+    `${ADMIN_BASE_URL}/${ORG_ID}/pending-applicants`,
+    { headers: headersFor(ADMIN_TOKEN) },
+  );
 
-  await log("GET PENDING APPLICANTS", res);
+  await log("ADMIN → GET PENDING APPLICANTS", res);
 }
 
-async function decideStaff(decision = "ACCEPTED") {
-  // decision: "ACCEPTED", "REJECTED", "SUSPENDED"
-  const res = await fetch(`${ADMIN_BASE_URL}/${ORG_ID}/decide-staff`, {
-    method: "POST",
-    headers: headersFor(USER_A_TOKEN),
-    body: JSON.stringify({
+async function adminDecideStaff(decision) {
+  const res = await post(
+    `${ADMIN_BASE_URL}/${ORG_ID}/decide-staff`,
+    ADMIN_TOKEN,
+    {
       id: STAFF_ID,
-      decision: decision,
-    }),
-  });
+      decision,
+    },
+  );
 
-  await log(`DECIDE STAFF (${decision})`, res);
+  await log(`ADMIN → DECIDE STAFF (${decision})`, res);
 }
 
-async function decideIssue(decision = "IN_PROGRESS", priority = "MEDIUM") {
-  // decision: "PENDING", "IN_PROGRESS", "RESOLVED", "REJECTED"
-  // priority: "LOW", "MEDIUM", "MEDIUM_HIGH", "HIGH"
-  const res = await fetch(`${ADMIN_BASE_URL}/${ORG_ID}/decide-issue`, {
-    method: "POST",
-    headers: headersFor(USER_A_TOKEN),
-    body: JSON.stringify({
+async function adminDecideIssue(decision, priority) {
+  const res = await post(
+    `${ADMIN_BASE_URL}/${ORG_ID}/decide-issue`,
+    ADMIN_TOKEN,
+    {
       id: ISSUE_ID,
-      decision: decision,
-      priority: priority,
-    }),
-  });
+      decision,
+      priority,
+    },
+  );
 
-  await log(`DECIDE ISSUE (${decision}, ${priority})`, res);
+  await log(`ADMIN → DECIDE ISSUE`, res);
 }
 
-async function assignIssue() {
-  const res = await fetch(`${ADMIN_BASE_URL}/${ORG_ID}/assign-issue`, {
-    method: "POST",
-    headers: headersFor(USER_A_TOKEN),
-    body: JSON.stringify({
+async function adminAssignIssue() {
+  const res = await post(
+    `${ADMIN_BASE_URL}/${ORG_ID}/assign-issue`,
+    ADMIN_TOKEN,
+    {
       id: ISSUE_ID,
       staffId: STAFF_ID,
-    }),
-  });
+    },
+  );
 
-  await log("ASSIGN ISSUE", res);
+  await log("ADMIN → ASSIGN ISSUE", res);
 }
 
-/* -------------------------
- VALIDATION / FAILURE TESTS
--------------------------- */
+/* =========================
+ NEGATIVE / EDGE CASES
+========================= */
 
-async function decideIssueInvalidEnum() {
-  const res = await fetch(`${ADMIN_BASE_URL}/${ORG_ID}/decide-issue`, {
-    method: "POST",
-    headers: headersFor(USER_A_TOKEN),
-    body: JSON.stringify({
-      id: ISSUE_ID,
-      decision: "INVALID_DECISION",
-      priority: "SUPER_HIGH",
-    }),
-  });
-
-  await log("DECIDE ISSUE INVALID ENUM", res);
-}
-
-async function unauthorizedAccess() {
-  const res = await fetch(`${ADMIN_BASE_URL}/${ORG_ID}/decide-issue`, {
-    method: "POST",
-    headers: headersFor(USER_B_TOKEN), // Assuming USER_B is not admin or proper role check fails
-    body: JSON.stringify({
+async function staffTriesAdminRoute() {
+  const res = await post(
+    `${ADMIN_BASE_URL}/${ORG_ID}/decide-issue`,
+    STAFF_TOKEN,
+    {
       id: ISSUE_ID,
       decision: "RESOLVED",
       priority: "HIGH",
-    }),
-  });
+    },
+  );
 
-  await log("UNAUTHORIZED ACCESS (USER B)", res);
+  await log("STAFF TRY ADMIN ROUTE", res);
 }
 
-/* -------------------------
- RUN
--------------------------- */
+async function memberTriesAdminRoute() {
+  const res = await post(
+    `${ADMIN_BASE_URL}/${ORG_ID}/decide-issue`,
+    MEMBER_TOKEN,
+    {
+      id: ISSUE_ID,
+      decision: "RESOLVED",
+    },
+  );
+
+  await log("MEMBER TRY ADMIN ROUTE", res);
+}
+
+async function invalidEnums() {
+  const res = await post(
+    `${ADMIN_BASE_URL}/${ORG_ID}/decide-issue`,
+    ADMIN_TOKEN,
+    {
+      id: ISSUE_ID,
+      decision: "BROKEN",
+      priority: "ULTRA",
+    },
+  );
+
+  await log("INVALID ENUMS", res);
+}
+
+async function missingBody() {
+  const res = await post(
+    `${ADMIN_BASE_URL}/${ORG_ID}/decide-issue`,
+    ADMIN_TOKEN,
+    {},
+  );
+
+  await log("MISSING BODY", res);
+}
+
+async function invalidUUID() {
+  const res = await post(
+    `${ADMIN_BASE_URL}/${ORG_ID}/assign-issue`,
+    ADMIN_TOKEN,
+    {
+      id: "123",
+      staffId: STAFF_ID,
+    },
+  );
+
+  await log("INVALID UUID", res);
+}
+
+async function assignToMember() {
+  const res = await post(
+    `${ADMIN_BASE_URL}/${ORG_ID}/assign-issue`,
+    ADMIN_TOKEN,
+    {
+      id: ISSUE_ID,
+      staffId: MEMBER_ID,
+    },
+  );
+
+  await log("ASSIGN ISSUE TO MEMBER", res);
+}
+
+/* =========================
+ RUN EVERYTHING
+========================= */
 
 async function run() {
-  console.log("\nADMIN TEST SUITE START\n");
+  console.log("\n🚀 ADMIN TEST SUITE START\n");
 
-  if (ORG_ID === "PASTE_ORG_ID_HERE") {
-    console.warn(
-      "⚠️  PLEASE SET ORG_ID, ISSUE_ID, STAFF_ID AND TOKENS BEFORE RUNNING ⚠️",
-    );
-    return;
-  }
+  await adminGetPending();
 
-  await getPendingApplicants();
+  await adminDecideStaff("ACCEPTED");
 
-  // Uncomment based on what state you want to test
-  // await decideStaff("ACCEPTED");
+  await adminDecideIssue("IN_PROGRESS", "HIGH");
 
-  await decideIssue("IN_PROGRESS", "HIGH");
-  await assignIssue();
+  await adminAssignIssue();
 
-  // Failure cases
-  await decideIssueInvalidEnum();
-  await unauthorizedAccess();
+  // ❌ failure cases
+  await staffTriesAdminRoute();
+  await memberTriesAdminRoute();
+  await invalidEnums();
+  await missingBody();
+  await invalidUUID();
+  await assignToMember();
 
-  console.log("\nADMIN TEST SUITE FINISHED\n");
+  console.log("\n✅ ADMIN TEST SUITE FINISHED\n");
 }
 
 run();
