@@ -1,174 +1,167 @@
 const ORG_BASE_URL = "http://localhost:3000/api/org";
 
-/*
-  TOKENS FROM auth.test.js
-  Replace these before running
-*/
+/* ================= TOKENS ================= */
 
-const USER_A_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJhMThhZDhjZS0xYThkLTQ1MTYtYTkzNi0xNDA2YzM0N2Y5YjIiLCJpYXQiOjE3NzA0OTMzNzMsImV4cCI6MTc3MTA5ODE3M30.mAWTYIH4l9sC3n0x9dyDA4qFLAIRymLC2RYdtxO4ZBY"; // ADMIN
-const USER_B_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIyODIxNjY1NS1kYjExLTQxZmMtYjdhOC0zM2VkOWFmZDU5OTYiLCJpYXQiOjE3NzA0OTMzNzQsImV4cCI6MTc3MTA5ODE3NH0.rpCy3673UCu-84fkkVHPE3GrOnLF6DIgTcBnW3HWn2I"; // MEMBER
+const ADMIN_TOKEN =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI3ZjU2YWRkZi00OTlhLTRjNmQtYmNhYy1hMzdlZmY3MmZhMGIiLCJpYXQiOjE3NzA1MzU1NTksImV4cCI6MTc3MTE0MDM1OX0.8QaOSaddMbdzSD9mgTmJ-XxZ2-6O2p9bp10G-mvIQl0";
 
-let createdOrgId = null;
+const MEMBER_TOKEN =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ZjQ3YTAyOS1hM2IzLTQzOTEtYjhkNy00NDE4NWJlY2MwNmMiLCJpYXQiOjE3NzA1MzU0NDUsImV4cCI6MTc3MTE0MDI0NX0.AcYZwFPwtB_gqEPmUNUA9HADFsnlVuEiqW1wB5vpz5Y";
 
-/* -------------------------
- Helpers
--------------------------- */
+const STAFF_TOKEN =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIzMDlkMmJmNy1jMDhlLTRlN2ItYWFhMC05ZTUyY2ZkZjAzYTAiLCJpYXQiOjE3NzA1MzU1NTksImV4cCI6MTc3MTE0MDM1OX0.prcgXOnJO9-yQGd_-QbT3PJO1SSngeF99iZ6fSvJJEU";
 
-const headersFor = (token) => ({
+/* ========================================= */
+
+let ORG_ID = null;
+
+/* ================= HELPERS ================= */
+
+const headers = (token) => ({
   "Content-Type": "application/json",
   Authorization: `Bearer ${token}`,
 });
 
-const log = async (title, res) => {
-  let data;
+async function log(title, res) {
+  let body = {};
   try {
-    data = await res.json();
-  } catch {
-    data = {};
-  }
+    body = await res.json();
+  } catch {}
 
-  console.log(`\n${title}`);
+  console.log(`\n===== ${title} =====`);
   console.log("STATUS:", res.status);
-  console.log("DATA:", JSON.stringify(data, null, 2));
-};
+  console.log(JSON.stringify(body, null, 2));
 
-/* -------------------------
- CREATE ORG TESTS
--------------------------- */
+  return body;
+}
+
+/* ================= CREATE ================= */
 
 async function adminCreateOrg() {
   const res = await fetch(`${ORG_BASE_URL}/create-org`, {
     method: "POST",
-    headers: headersFor(USER_A_TOKEN),
+    headers: headers(ADMIN_TOKEN),
     body: JSON.stringify({
-      name: "Chaos Org",
-      description: "Schema testing",
-      address: "Delhi",
-      slug: "chaos-org",
-      jobCategories: [{ name: "Engineering" }],
-      issueCategories: [{ name: "HR" }],
+      name: "Chaos Mega Org",
+      description: "Full RBAC + schema stress test",
+      address: "South Delhi",
+      slug: "chaos-mega-org",
+
+      jobCategories: [
+        { name: "Engineering" },
+        { name: "Frontend" },
+        { name: "Backend" },
+        { name: "DevOps" },
+        { name: "QA" },
+        { name: "Product" },
+        { name: "Design" },
+        { name: "HR" },
+        { name: "Finance" },
+        { name: "Sales" },
+      ],
+
+      issueCategories: [
+        { name: "Payroll" },
+        { name: "Leave" },
+        { name: "Laptop" },
+        { name: "VPN" },
+        { name: "Bug" },
+        { name: "Access" },
+        { name: "Recruitment" },
+        { name: "Office Admin" },
+      ],
     }),
   });
 
-  const body = await res.json();
-  createdOrgId = body.id;
-
-  console.log("\nADMIN CREATE ORG");
-  console.log("STATUS:", res.status);
-  console.log("DATA:", JSON.stringify(body, null, 2));
+  const body = await log("ADMIN CREATE ORG", res);
+  ORG_ID = body.id;
 }
 
-async function createOrgNoAuth() {
+/* ================= PERMISSION ================= */
+
+async function staffCreateOrg() {
   const res = await fetch(`${ORG_BASE_URL}/create-org`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: headers(STAFF_TOKEN),
+    body: JSON.stringify({ name: "Illegal Org" }),
   });
 
-  await log("CREATE ORG WITHOUT TOKEN", res);
+  await log("STAFF CREATE ORG (SHOULD FAIL)", res);
 }
 
-async function createOrgMissingName() {
+async function memberCreateOrg() {
   const res = await fetch(`${ORG_BASE_URL}/create-org`, {
     method: "POST",
-    headers: headersFor(USER_A_TOKEN),
-    body: JSON.stringify({
-      description: "Desc",
-      address: "Delhi",
-      jobCategories: [{ name: "Eng" }],
-      issueCategories: [{ name: "HR" }],
-    }),
+    headers: headers(MEMBER_TOKEN),
+    body: JSON.stringify({ name: "Illegal Org" }),
   });
 
-  await log("CREATE ORG MISSING NAME", res);
+  await log("MEMBER CREATE ORG (SHOULD FAIL)", res);
 }
 
-async function createOrgEmptyDescription() {
-  const res = await fetch(`${ORG_BASE_URL}/create-org`, {
+/* ================= JOIN ================= */
+
+async function staffJoin() {
+  const res = await fetch(`${ORG_BASE_URL}/join-org/${ORG_ID}`, {
     method: "POST",
-    headers: headersFor(USER_A_TOKEN),
-    body: JSON.stringify({
-      name: "Org",
-      description: "",
-      address: "Delhi",
-      jobCategories: [{ name: "Eng" }],
-      issueCategories: [{ name: "HR" }],
-    }),
+    headers: headers(STAFF_TOKEN),
+    body: JSON.stringify({ role: "STAFF",jobCategoryId:"2d60fec6-8210-4a56-bb49-3c72835d36ce" }),
   });
 
-  await log("CREATE ORG EMPTY DESCRIPTION", res);
+  await log("STAFF JOIN ORG", res);
 }
 
-async function createOrgEmptyCategories() {
-  const res = await fetch(`${ORG_BASE_URL}/create-org`, {
+async function memberJoin() {
+  const res = await fetch(`${ORG_BASE_URL}/join-org/${ORG_ID}`, {
     method: "POST",
-    headers: headersFor(USER_A_TOKEN),
-    body: JSON.stringify({
-      name: "Org",
-      description: "Desc",
-      address: "Delhi",
-      jobCategories: [],
-      issueCategories: [],
-    }),
-  });
-
-  await log("CREATE ORG EMPTY CATEGORIES", res);
-}
-
-/* -------------------------
- JOIN ORG TESTS
--------------------------- */
-
-async function userBJoinOrg() {
-  const res = await fetch(`${ORG_BASE_URL}/join-org/${createdOrgId}`, {
-    method: "POST",
-    headers: headersFor(USER_B_TOKEN),
+    headers: headers(MEMBER_TOKEN),
     body: JSON.stringify({ role: "MEMBER" }),
   });
 
-  await log("USER B JOINS ORG", res);
+  await log("MEMBER JOIN ORG", res);
 }
 
-async function userBJoinAgain() {
-  const res = await fetch(`${ORG_BASE_URL}/join-org/${createdOrgId}`, {
+async function joinAgain() {
+  const res = await fetch(`${ORG_BASE_URL}/join-org/${ORG_ID}`, {
     method: "POST",
-    headers: headersFor(USER_B_TOKEN),
+    headers: headers(MEMBER_TOKEN),
     body: JSON.stringify({ role: "MEMBER" }),
   });
 
-  await log("USER B JOIN AGAIN", res);
+  await log("DUPLICATE JOIN", res);
 }
 
-async function joinInvalidRole() {
-  const res = await fetch(`${ORG_BASE_URL}/join-org/${createdOrgId}`, {
+async function invalidRole() {
+  const res = await fetch(`${ORG_BASE_URL}/join-org/${ORG_ID}`, {
     method: "POST",
-    headers: headersFor(USER_B_TOKEN),
+    headers: headers(STAFF_TOKEN),
     body: JSON.stringify({ role: "OWNER" }),
   });
 
-  await log("JOIN INVALID ROLE", res);
+  await log("INVALID ROLE", res);
 }
 
-async function joinMissingRole() {
-  const res = await fetch(`${ORG_BASE_URL}/join-org/${createdOrgId}`, {
+async function missingRole() {
+  const res = await fetch(`${ORG_BASE_URL}/join-org/${ORG_ID}`, {
     method: "POST",
-    headers: headersFor(USER_B_TOKEN),
-    body: JSON.stringify({}),
+    headers: headers(STAFF_TOKEN),
   });
 
-  await log("JOIN MISSING ROLE", res);
+  await log("MISSING ROLE", res);
 }
 
-async function joinInvalidOrg() {
+async function joinFakeOrg() {
   const res = await fetch(`${ORG_BASE_URL}/join-org/fake-id`, {
     method: "POST",
-    headers: headersFor(USER_B_TOKEN),
+    headers: headers(STAFF_TOKEN),
+    body: JSON.stringify({ role: "MEMBER" }),
   });
 
-  await log("JOIN INVALID ORG", res);
+  await log("JOIN FAKE ORG", res);
 }
 
 async function joinNoAuth() {
-  const res = await fetch(`${ORG_BASE_URL}/join-org/${createdOrgId}`, {
+  const res = await fetch(`${ORG_BASE_URL}/join-org/${ORG_ID}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
   });
@@ -176,46 +169,28 @@ async function joinNoAuth() {
   await log("JOIN WITHOUT TOKEN", res);
 }
 
-/* -------------------------
- PERMISSION TEST
--------------------------- */
-
-async function memberCreateOrg() {
-  const res = await fetch(`${ORG_BASE_URL}/create-org`, {
-    method: "POST",
-    headers: headersFor(USER_B_TOKEN),
-    body: JSON.stringify({
-      name: "Illegal Org",
-    }),
-  });
-
-  await log("MEMBER CREATE ORG", res);
-}
-
-/* -------------------------
- RUN
--------------------------- */
+/* ================= RUN ================= */
 
 async function run() {
-  console.log("\nORG TEST SUITE START\n");
+  console.log("\n🔥 ORG FULL TEST START 🔥");
 
   await adminCreateOrg();
 
-  await createOrgNoAuth();
-  await createOrgMissingName();
-  await createOrgEmptyDescription();
-  await createOrgEmptyCategories();
+  if (!ORG_ID) return console.log("ORG NOT CREATED");
 
-  await userBJoinOrg();
-  await userBJoinAgain();
-  await joinInvalidRole();
-  await joinMissingRole();
-  await joinInvalidOrg();
-  await joinNoAuth();
-
+  await staffCreateOrg();
   await memberCreateOrg();
 
-  console.log("\nORG TEST SUITE FINISHED\n");
+  await staffJoin();
+  await memberJoin();
+
+  await joinAgain();
+  await invalidRole();
+  await missingRole();
+  await joinFakeOrg();
+  await joinNoAuth();
+
+  console.log("\n✅ ORG FULL TEST FINISHED\n");
 }
 
 run();

@@ -64,8 +64,8 @@ async function invalidRegister() {
 // --------------------
 async function raceRegister() {
   const payload = {
-    name:"racist23032",
-    email: "race@test.com",
+    name:"staff123",
+    email: "staff123@test.com",
     password: "Password123"
   };
 
