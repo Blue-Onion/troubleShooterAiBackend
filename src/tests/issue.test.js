@@ -1,4 +1,3 @@
-
 // import FormData from "form-data"; // Using native FormData in Node 18+
 const ISSUE_BASE_URL = "http://localhost:3000/api/issue";
 
@@ -7,11 +6,11 @@ const ISSUE_BASE_URL = "http://localhost:3000/api/issue";
   Replace these before running
 */
 const USER_TOKEN =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ZjQ3YTAyOS1hM2IzLTQzOTEtYjhkNy00NDE4NWJlY2MwNmMiLCJpYXQiOjE3NzA1MzU0NDUsImV4cCI6MTc3MTE0MDI0NX0.AcYZwFPwtB_gqEPmUNUA9HADFsnlVuEiqW1wB5vpz5Y";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIwYjc3NDVjMi1iNmE4LTRmMWQtOGJkYi04Mjg2NDE3ZmY3ZjEiLCJpYXQiOjE3NzA1Nzk4MDcsImV4cCI6MTc3MTE4NDYwN30.W38vtw2nUEWaGWSZBc82d2gHHNoJZQyDvDbXH5MlfCo";
 
 // IDs needed for tests
-const ORG_ID = "a3059a1f-05ab-4b66-8ce2-ea45ad894cdf";
-const CATEGORY_ID = "7740bbca-1553-4b7f-bd11-e651958586bc"; // Issue Category ID
+const ORG_ID = "74179c43-1fc7-4f05-9117-9ba78f19f7b7";
+const CATEGORY_ID = "6eb774b8-7496-41c4-859a-f5a311bb73e9"; // Issue Category ID
 
 let createdIssueId = null;
 

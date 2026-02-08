@@ -4,21 +4,21 @@ const ADMIN_BASE_URL = "http://localhost:3000/api/admin";
   TOKENS (replace)
 */
 const ADMIN_TOKEN =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI3ZjU2YWRkZi00OTlhLTRjNmQtYmNhYy1hMzdlZmY3MmZhMGIiLCJpYXQiOjE3NzA1MzU1NTksImV4cCI6MTc3MTE0MDM1OX0.8QaOSaddMbdzSD9mgTmJ-XxZ2-6O2p9bp10G-mvIQl0";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIwOTMxOGJjNy1iNWI1LTQxOGMtYWY5NS04NTg5NGZhZGE1ZjUiLCJpYXQiOjE3NzA1Nzk4NTQsImV4cCI6MTc3MTE4NDY1NH0.m_JQF_BUE1yGyMHxNb3YULpFIUC_5sILiouxyGdSIsQ";
 
 const MEMBER_TOKEN =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ZjQ3YTAyOS1hM2IzLTQzOTEtYjhkNy00NDE4NWJlY2MwNmMiLCJpYXQiOjE3NzA1MzU0NDUsImV4cCI6MTc3MTE0MDI0NX0.AcYZwFPwtB_gqEPmUNUA9HADFsnlVuEiqW1wB5vpz5Y";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIwYjc3NDVjMi1iNmE4LTRmMWQtOGJkYi04Mjg2NDE3ZmY3ZjEiLCJpYXQiOjE3NzA1Nzk4MDcsImV4cCI6MTc3MTE4NDYwN30.W38vtw2nUEWaGWSZBc82d2gHHNoJZQyDvDbXH5MlfCo";
 
 const STAFF_TOKEN =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIzMDlkMmJmNy1jMDhlLTRlN2ItYWFhMC05ZTUyY2ZkZjAzYTAiLCJpYXQiOjE3NzA1MzU1NTksImV4cCI6MTc3MTE0MDM1OX0.prcgXOnJO9-yQGd_-QbT3PJO1SSngeF99iZ6fSvJJEU";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI0MDlmYjk4Zi00Njc3LTQ4NTMtODYzNS1kNTVlOGExNDIwNzciLCJpYXQiOjE3NzA1Nzk4NTUsImV4cCI6MTc3MTE4NDY1NX0.quLGfDZ8Wr6-FnB-Ryy95YeyQMbBPBcjNwoeFdfkXaU";
 
 /*
   IDS (replace)
 */
-const ORG_ID = "a3059a1f-05ab-4b66-8ce2-ea45ad894cdf";
-const ISSUE_ID = "0cd6b5b0-421a-4737-87a3-6269a1579013";
-const STAFF_ID = "c7b7f777-97dc-4ada-8902-ff3311e5c3ed";
-const MEMBER_ID = "f0c8af8e-a47e-45ec-a487-d04e0064ec4b";
+const ORG_ID = "74179c43-1fc7-4f05-9117-9ba78f19f7b7";
+const ISSUE_ID = "b4208e34-db9b-4ec3-ac5e-55a8e1aa7821";
+const STAFF_ID = "07d54a1d-be83-46fa-9066-1fad9582c6bb";
+const MEMBER_ID = "9fd01306-a54e-4e14-918e-f6d247da963b";
 
 /* -------------------------
  Helpers
@@ -29,15 +29,25 @@ const headersFor = (token) => ({
   Authorization: `Bearer ${token}`,
 });
 
-async function log(title, res) {
+function assertStatus(res, expectedStatus, title) {
+  if (res.status !== expectedStatus) {
+    console.error(
+      `❌ ${title} FAILED: Expected ${expectedStatus}, got ${res.status}`,
+    );
+    // process.exit(1); // Optional: stop on failure
+  } else {
+    console.log(`✅ ${title} PASSED (${res.status})`);
+  }
+}
+
+async function log(title, res, expectedStatus = 200) {
   let data = {};
   try {
     data = await res.json();
   } catch {}
 
-  console.log(`\n${title}`);
-  console.log("STATUS:", res.status);
-  console.log("DATA:", JSON.stringify(data, null, 2));
+  assertStatus(res, expectedStatus, title);
+  // console.log("DATA:", JSON.stringify(data, null, 2));
 }
 
 async function post(url, token, body) {
@@ -53,12 +63,11 @@ async function post(url, token, body) {
 ========================= */
 
 async function adminGetPending() {
-  const res = await fetch(
-    `${ADMIN_BASE_URL}/${ORG_ID}/pending-applicants`,
-    { headers: headersFor(ADMIN_TOKEN) },
-  );
+  const res = await fetch(`${ADMIN_BASE_URL}/${ORG_ID}/pending-applicants`, {
+    headers: headersFor(ADMIN_TOKEN),
+  });
 
-  await log("ADMIN → GET PENDING APPLICANTS", res);
+  await log("ADMIN → GET PENDING APPLICANTS", res, 200);
 }
 
 async function adminDecideStaff(decision) {
@@ -71,7 +80,7 @@ async function adminDecideStaff(decision) {
     },
   );
 
-  await log(`ADMIN → DECIDE STAFF (${decision})`, res);
+  await log(`ADMIN → DECIDE STAFF (${decision})`, res, 200);
 }
 
 async function adminDecideIssue(decision, priority) {
@@ -85,7 +94,7 @@ async function adminDecideIssue(decision, priority) {
     },
   );
 
-  await log(`ADMIN → DECIDE ISSUE`, res);
+  await log(`ADMIN → DECIDE ISSUE`, res, 200);
 }
 
 async function adminAssignIssue() {
@@ -98,7 +107,7 @@ async function adminAssignIssue() {
     },
   );
 
-  await log("ADMIN → ASSIGN ISSUE", res);
+  await log("ADMIN → ASSIGN ISSUE", res, 200);
 }
 
 /* =========================
@@ -116,7 +125,7 @@ async function staffTriesAdminRoute() {
     },
   );
 
-  await log("STAFF TRY ADMIN ROUTE", res);
+  await log("STAFF TRY ADMIN ROUTE", res, 403);
 }
 
 async function memberTriesAdminRoute() {
@@ -126,10 +135,11 @@ async function memberTriesAdminRoute() {
     {
       id: ISSUE_ID,
       decision: "RESOLVED",
+      priority: "HIGH", // Added priority to pass validation
     },
   );
 
-  await log("MEMBER TRY ADMIN ROUTE", res);
+  await log("MEMBER TRY ADMIN ROUTE", res, 403);
 }
 
 async function invalidEnums() {
@@ -143,7 +153,7 @@ async function invalidEnums() {
     },
   );
 
-  await log("INVALID ENUMS", res);
+  await log("INVALID ENUMS", res, 400);
 }
 
 async function missingBody() {
@@ -153,7 +163,7 @@ async function missingBody() {
     {},
   );
 
-  await log("MISSING BODY", res);
+  await log("MISSING BODY", res, 400);
 }
 
 async function invalidUUID() {
@@ -166,7 +176,7 @@ async function invalidUUID() {
     },
   );
 
-  await log("INVALID UUID", res);
+  await log("INVALID UUID", res, 404);
 }
 
 async function assignToMember() {
@@ -179,7 +189,7 @@ async function assignToMember() {
     },
   );
 
-  await log("ASSIGN ISSUE TO MEMBER", res);
+  await log("ASSIGN ISSUE TO MEMBER (Should Fail)", res, 400);
 }
 
 /* =========================

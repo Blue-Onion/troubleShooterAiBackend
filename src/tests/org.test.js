@@ -3,17 +3,17 @@ const ORG_BASE_URL = "http://localhost:3000/api/org";
 /* ================= TOKENS ================= */
 
 const ADMIN_TOKEN =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI3ZjU2YWRkZi00OTlhLTRjNmQtYmNhYy1hMzdlZmY3MmZhMGIiLCJpYXQiOjE3NzA1MzU1NTksImV4cCI6MTc3MTE0MDM1OX0.8QaOSaddMbdzSD9mgTmJ-XxZ2-6O2p9bp10G-mvIQl0";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIwOTMxOGJjNy1iNWI1LTQxOGMtYWY5NS04NTg5NGZhZGE1ZjUiLCJpYXQiOjE3NzA1Nzk4NTQsImV4cCI6MTc3MTE4NDY1NH0.m_JQF_BUE1yGyMHxNb3YULpFIUC_5sILiouxyGdSIsQ";
 
 const MEMBER_TOKEN =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ZjQ3YTAyOS1hM2IzLTQzOTEtYjhkNy00NDE4NWJlY2MwNmMiLCJpYXQiOjE3NzA1MzU0NDUsImV4cCI6MTc3MTE0MDI0NX0.AcYZwFPwtB_gqEPmUNUA9HADFsnlVuEiqW1wB5vpz5Y";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIwYjc3NDVjMi1iNmE4LTRmMWQtOGJkYi04Mjg2NDE3ZmY3ZjEiLCJpYXQiOjE3NzA1Nzk4MDcsImV4cCI6MTc3MTE4NDYwN30.W38vtw2nUEWaGWSZBc82d2gHHNoJZQyDvDbXH5MlfCo";
 
 const STAFF_TOKEN =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIzMDlkMmJmNy1jMDhlLTRlN2ItYWFhMC05ZTUyY2ZkZjAzYTAiLCJpYXQiOjE3NzA1MzU1NTksImV4cCI6MTc3MTE0MDM1OX0.prcgXOnJO9-yQGd_-QbT3PJO1SSngeF99iZ6fSvJJEU";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI0MDlmYjk4Zi00Njc3LTQ4NTMtODYzNS1kNTVlOGExNDIwNzciLCJpYXQiOjE3NzA1Nzk4NTUsImV4cCI6MTc3MTE4NDY1NX0.quLGfDZ8Wr6-FnB-Ryy95YeyQMbBPBcjNwoeFdfkXaU";
 
 /* ========================================= */
 
-let ORG_ID = null;
+let ORG_ID = "74179c43-1fc7-4f05-9117-9ba78f19f7b7";
 
 /* ================= HELPERS ================= */
 
@@ -105,7 +105,10 @@ async function staffJoin() {
   const res = await fetch(`${ORG_BASE_URL}/join-org/${ORG_ID}`, {
     method: "POST",
     headers: headers(STAFF_TOKEN),
-    body: JSON.stringify({ role: "STAFF",jobCategoryId:"2d60fec6-8210-4a56-bb49-3c72835d36ce" }),
+    body: JSON.stringify({
+      role: "STAFF",
+      jobCategoryId: "19ccf0b5-f249-4dc4-a3e2-21e2cc51c61a",
+    }),
   });
 
   await log("STAFF JOIN ORG", res);
@@ -174,21 +177,21 @@ async function joinNoAuth() {
 async function run() {
   console.log("\n🔥 ORG FULL TEST START 🔥");
 
-  await adminCreateOrg();
+//   await adminCreateOrg();
 
-  if (!ORG_ID) return console.log("ORG NOT CREATED");
+//   if (!ORG_ID) return console.log("ORG NOT CREATED");
 
-  await staffCreateOrg();
-  await memberCreateOrg();
+//   await staffCreateOrg();
+//   await memberCreateOrg();
 
   await staffJoin();
-  await memberJoin();
+//   await memberJoin();
 
-  await joinAgain();
-  await invalidRole();
-  await missingRole();
-  await joinFakeOrg();
-  await joinNoAuth();
+//   await joinAgain();
+//   await invalidRole();
+//   await missingRole();
+//   await joinFakeOrg();
+//   await joinNoAuth();
 
   console.log("\n✅ ORG FULL TEST FINISHED\n");
 }

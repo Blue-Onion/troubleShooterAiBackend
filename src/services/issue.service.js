@@ -4,6 +4,27 @@ import { createIssueSchema } from "#src/validations/issue.validation.js";
 import { GoogleGenAI } from "@google/genai";
 import fs from "fs";
 const ai = new GoogleGenAI({});
+const isMember=async(userId,orgId)=>{
+    const membership=await db.membership.findUnique({
+        where:{
+            userId_organizationId:{
+                userId,
+                organizationId:orgId
+            }
+        }
+    })
+    if(!membership){
+        const error=new Error("Unauthorized")
+        error.status=401
+        throw error
+    }
+    if(membership.status!="ACCEPTED"){
+        const error=new Error("Unauthorized Id isn't accepted to the organization")
+        error.status=401
+        throw error
+    }
+    return membership
+}
 export const getAllIssue = async (userId, orgId) => {
   if (!userId) {
     const error = new Error("Unauthorized");
@@ -109,16 +130,18 @@ export const createIssue = async (userId, orgId, data) => {
         error.status=400
         throw error
     }
+    const membership=await isMember(userId,orgId)
+
+    
     const issue = await db.issue.create({
       data: {
         title: name,
         description: description,
         priority: "MEDIUM",
-
         categoryId: categoryId,
         imageUrl: imgUrl,
         organizationId: orgId,
-        reportedById: userId,
+        reportedById: membership.id,
       },
     });
     return issue;

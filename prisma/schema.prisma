@@ -14,10 +14,7 @@ model User {
   email    String @unique
   password String
 
-  memberships    Membership[]
-  reportedIssues Issue[]      @relation("ReportedBy")
-
-  assignedIssues Issue[] @relation("AssignedStaff")
+  memberships Membership[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -48,11 +45,12 @@ model Membership {
   status         MembershipStatus @default(PENDING)
   jobCategoryId  String?
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  jobCategory  JobCategory? @relation(fields: [jobCategoryId], references: [id], onDelete: SetNull)
 
-  jobCategory JobCategory? @relation(fields: [jobCategoryId], references: [id], onDelete: SetNull)
+  reportedIssues Issue[] @relation("ReportedByMembership")
+  assignedIssues Issue[] @relation("AssignedStaffMembership")
 
   createdAt DateTime @default(now())
 
@@ -64,14 +62,15 @@ model Issue {
 
   organizationId String
   categoryId     String
-  reportedById   String
-  assignedToId   String?
+
+  reportedById String
+  assignedToId String?
 
   organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   category     IssueCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  reportedBy   User          @relation("ReportedBy", fields: [reportedById], references: [id], onDelete: Cascade)
 
-  assignedTo User? @relation(name: "AssignedStaff", fields: [assignedToId], references: [id], onDelete: SetNull)
+  reportedBy Membership  @relation("ReportedByMembership", fields: [reportedById], references: [id])
+  assignedTo Membership? @relation("AssignedStaffMembership", fields: [assignedToId], references: [id])
 
   title       String
   description String
