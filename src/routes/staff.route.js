@@ -1,5 +1,20 @@
 import { authenticate } from "#src/middleware/auth.middleware.js";
 import express from "express";
 const router = express.Router();
+router.get("/:orgId/getStaffs", (req, res) => {
+    res.send("Staff")
+})
+router.get("/:orgId/getStaff/:id", (req, res) => {
+    res.send("Staff")
+})
+router.post("/:orgId/createStaff", (req, res) => {
+    res.send("Staff")
+})
+router.put("/:orgId/updateStaff/:id", (req, res) => {
+    res.send("Staff")
+})
+router.delete("/:orgId/deleteStaff/:id", (req, res) => {
+    res.send("Staff")
+})
 router.use(authenticate)
 export default router
