@@ -41,7 +41,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/org', orgRoutes);
 app.use('/api/issue', issueRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/staff', staffRoutes);
+app.use('/api/staff/:orgId', staffRoutes);
+
 
 // Error handling middleware
 app.use((err, req, res, next) => {
