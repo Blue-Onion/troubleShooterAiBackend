@@ -7,14 +7,12 @@ router.get("/:orgId/getStaffs", (req, res) => {
 router.get("/:orgId/getStaff/:id", (req, res) => {
     res.send("Staff")
 })
-router.post("/:orgId/createStaff", (req, res) => {
+router.get("/:orgId/getIssues", (req, res) => {
     res.send("Staff")
 })
-router.put("/:orgId/updateStaff/:id", (req, res) => {
+router.get("/:orgId/getIssue/:id", (req, res) => {
     res.send("Staff")
 })
-router.delete("/:orgId/deleteStaff/:id", (req, res) => {
-    res.send("Staff")
-})
+
 router.use(authenticate)
 export default router
