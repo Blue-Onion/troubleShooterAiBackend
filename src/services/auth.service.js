@@ -1,14 +1,14 @@
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import { db } from '#lib/prisma.js';
-import logger from '#utils/logger.js';
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import { db } from "#lib/prisma.js";
+import logger from "#utils/logger.js";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
 if (!JWT_SECRET) {
-  throw new Error('JWT_SECRET environment variable is required');
+  throw new Error("JWT_SECRET environment variable is required");
 }
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
 const SALT_ROUNDS = 12;
 
 /**
@@ -41,7 +41,7 @@ export const verifyToken = (token) => {
   try {
     return jwt.verify(token, JWT_SECRET);
   } catch (error) {
-    logger.error('Token verification failed:', error);
+    logger.error("Token verification failed:", error);
     return null;
   }
 };
@@ -50,36 +50,50 @@ export const verifyToken = (token) => {
  * Register a new user
  */
 export const registerUser = async (userData) => {
-  const { email, password, name } = userData;
+  try {
+    const { email, password, name } = userData;
+    if (!email) {
+      const error = new Error("Invalid email");
+      error.status = 400;
+      throw error;
+    }
+    if (!password) {
+      const error = new Error("Invalid password");
+      error.status = 400;
+      throw error;
+    }
+    // Check if user already exists
+    const existingUser = await db.user.findUnique({
+      where: { email },
+    });
 
-  // Check if user already exists
-  const existingUser = await db.user.findUnique({
-    where: { email },
-  });
+    if (existingUser) {
+      throw new Error("User with this email already exists");
+    }
 
-  if (existingUser) {
-    throw new Error('User with this email already exists');
+    // Hash password
+    const hashedPassword = await hashPassword(password);
+
+    // Create user
+    const user = await db.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        name: name || null,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        createdAt: true,
+      },
+    });
+
+    return user;
+  } catch (error) {
+    logger.error("Registration error:", error);
+    throw error;
   }
-
-  // Hash password
-  const hashedPassword = await hashPassword(password);
-
-  // Create user
-  const user = await db.user.create({
-    data: {
-      email,
-      password: hashedPassword,
-      name: name || null,
-    },
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      createdAt: true,
-    },
-  });
-
-  return user;
 };
 
 /**
@@ -87,50 +101,59 @@ export const registerUser = async (userData) => {
  */
 export const loginUser = async (email, password) => {
   // Find user by email
-  const user = await db.user.findUnique({
-    where: { email },
-  });
+  try {
+    const user = await db.user.findUnique({
+      where: { email },
+    });
 
-  if (!user) {
-    throw new Error('Invalid email or password');
+    if (!user) {
+      throw new Error("Invalid email or password");
+    }
+
+    // Compare passwords
+    const isPasswordValid = await comparePassword(password, user.password);
+
+    if (!isPasswordValid) {
+      throw new Error("Invalid email or password");
+    }
+
+    // Generate token
+    const token = generateToken(user.id);
+
+    // Return user data (without password) and token
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        createdAt: user.createdAt,
+      },
+      token,
+    };
+  } catch (error) {
+    logger.error("Login error:", error);
+    throw error;
   }
-
-  // Compare passwords
-  const isPasswordValid = await comparePassword(password, user.password);
-
-  if (!isPasswordValid) {
-    throw new Error('Invalid email or password');
-  }
-
-  // Generate token
-  const token = generateToken(user.id);
-
-  // Return user data (without password) and token
-  return {
-    user: {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      createdAt: user.createdAt,
-    },
-    token,
-  };
 };
 
 /**
  * Get user by ID
  */
 export const getUserById = async (userId) => {
-  const user = await db.user.findUnique({
-    where: { id: userId },
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      createdAt: true,
-    },
-  });
+  try {
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        createdAt: true,
+      },
+    });
 
-  return user;
+    return user;
+  } catch (error) {
+    logger.error("Get user by ID error:", error);
+    throw error;
+  }
 };
-

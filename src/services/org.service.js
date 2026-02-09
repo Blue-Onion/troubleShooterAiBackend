@@ -1,6 +1,11 @@
 import { db } from "#src/lib/prisma.js";
 import logger from "#src/utils/logger.js";
-
+import { webcrypto as crypto } from "node:crypto";
+const randomHex = (len = 4) => {
+  return [...crypto.getRandomValues(new Uint8Array(len / 2))]
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+};
 export const getOrg = async (userId, orgId) => {
   if (!userId) {
     const error = new Error("Unauthorized");
@@ -67,11 +72,19 @@ export const createOrg = async (userId, data) => {
     issueCategories = [],
   } = data;
 
-  const finalSlug =
-    slug ?? name.toLowerCase().trim().replace(/\s+/g, "-").replace(/-+/g, "-");
-
   try {
     return await db.$transaction(async (tx) => {
+      let finalSlug = slug;
+      if (!finalSlug) {
+        let baseSlug = name
+          .toLowerCase()
+          .trim()
+          .replace(/\s+/g, "-")
+          .replace(/-+/g, "-")
+          .replace(/(^-|-$)/g, "");
+        finalSlug = `${baseSlug}-${randomHex(4)}`;
+      }
+
       const org = await tx.organization.create({
         data: {
           name,
@@ -104,7 +117,7 @@ export const createOrg = async (userId, data) => {
           userId,
           organizationId: org.id,
           role: "ADMIN",
-          status:"ACCEPTED",
+          status: "ACCEPTED",
         },
       });
 
@@ -119,19 +132,16 @@ export const joinOrg = async (userId, orgId, data) => {
   if (!userId) throw new Error("Unauthorized");
   if (!orgId) throw new Error("Invalid id");
 
-  const { role, job } = data;
+  const { role, jobCategoryId } = data;
 
   try {
-    if (role === "STAFF") {
-      if (!job) throw new Error("Job category is required");
+    if (role !== "MEMBER") {
+      if (!jobCategoryId) throw new Error("Job category is required");
 
       return db.$transaction(async (tx) => {
         const jobCategory = await tx.jobCategory.findUnique({
           where: {
-            name_organizationId: {
-              name: job,
-              organizationId: orgId,
-            },
+            id: jobCategoryId,
           },
         });
 
@@ -139,6 +149,11 @@ export const joinOrg = async (userId, orgId, data) => {
           throw new Error("Invalid job category");
         }
 
+        // Ensure the job category belongs to the org
+        if (jobCategory.organizationId !== orgId) {
+          throw new Error("Job category does not belong to this organization");
+        }
+        
         return tx.membership.create({
           data: {
             userId,
@@ -177,7 +192,6 @@ export const leaveOrg = async (userId, orgId) => {
           },
         },
       });
-
       if (!membership) throw new Error("Not a member of this organization");
       if (membership.role === "ADMIN") {
         const adminCount = await tx.membership.count({
@@ -219,22 +233,15 @@ export const deleteOrg = async (userId, orgId) => {
   }
   try {
     return await db.$transaction(async (tx) => {
-      const orgIndex = await tx.organization.findUnique({
-        where: { id: orgId },
-      });
-
-      if (!orgIndex) {
-        const error = new Error("Organization not found");
-        error.status = 404;
-        throw error;
-      }
-
       const membership = await tx.membership.findUnique({
         where: {
           userId_organizationId: {
             userId,
             organizationId: orgId,
           },
+        },
+        include: {
+          organization: true,
         },
       });
 
@@ -248,6 +255,15 @@ export const deleteOrg = async (userId, orgId) => {
         error.status = 403;
         throw error;
       }
+      if (!membership.organization) {
+        const error = new Error("Organization not found");
+        error.status = 404;
+        throw error;
+      }
+
+      await tx.issue.deleteMany({
+        where: { organizationId: orgId },
+      });
 
       return await tx.organization.delete({
         where: { id: orgId },
