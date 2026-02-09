@@ -81,7 +81,7 @@ model Issue {
     status   IssueStatus @default(PENDING)
 
     staffVerdict   String?
-    staffVerdictAt DateTime @updatedAt
+    staffVerdictAt DateTime?
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
